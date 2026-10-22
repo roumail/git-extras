@@ -53,7 +53,17 @@ function! s:base(branch) abort
     call s:error('no merge-base between ' . l:branch . ' and ' . l:main)
     return ''
   endif
+  let s:bases[l:base[0]] = 1
   return l:base[0]
+endfunction
+
+" Merge-bases these commands have diffed against, to tell a diff's base side
+let s:bases = {}
+
+" Whether a fugitive revision ('<commit>:<path>') is a merge-base we diffed
+" against
+function! git_review#is_base(rev) abort
+  return has_key(s:bases, matchstr(a:rev, '^\x\{40,}'))
 endfunction
 
 function! git_review#diff_this() abort

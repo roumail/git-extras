@@ -38,12 +38,30 @@ function! s:init() abort
   " Close the fugitive side of the diff in this tab and turn diff mode off
   command! DiffClose call git_review#diff_close()
 
+  " Review comments, in their own quickfix list titled 'Review'
+  " Comment on the line or range, on the branch side of a diff; prompts
+  " unless the comment is given
+  command! -range -nargs=* ReviewComment
+        \ call git_review#comments#add(<line1>, <line2>, <q-args>)
+  " Open the 'Review' list
+  command! ReviewComments call git_review#comments#open()
+  " Write the comments to a file (default: review.txt in the git dir) and
+  " load them back
+  command! -nargs=? -complete=file ReviewSave call git_review#comments#save(<q-args>)
+  command! -nargs=? -complete=file ReviewLoad call git_review#comments#load(<q-args>)
+  if executable('gh')
+    " Post the comments as a pending review on the branch's PR (or number)
+    command! -nargs=? ReviewSubmit call git_review#comments#submit(<q-args>)
+  endif
+
   nnoremap <Plug>(git-review-diff-this) <Cmd>DiffThis<CR>
   nnoremap <Plug>(git-review-diff-main) <Cmd>DiffMain<CR>
   nnoremap <Plug>(git-review-changes-main) <Cmd>ChangesMain<CR>
   nnoremap <Plug>(git-review-review-main) <Cmd>ReviewMain<CR>
   nnoremap <Plug>(git-review-log-main) <Cmd>LogMain<CR>
   nnoremap <Plug>(git-review-diff-close) <Cmd>DiffClose<CR>
+  nnoremap <Plug>(git-review-comment) <Cmd>ReviewComment<CR>
+  xnoremap <Plug>(git-review-comment) :ReviewComment<CR>
 endfunction
 
 if v:vim_did_enter

@@ -27,12 +27,33 @@ new remote branches.
 Reviewing a PR: check it out (`gh pr checkout`), then `:ChangesMain` or
 `:ReviewMain`.
 
+## Review comments
+
+Comments collect in their own quickfix list, titled `Review`, so they don't mix
+with `:ChangesMain` or grep results. A comment is on a line or a range, on the
+branch side of a diff (or a file in the work tree); the merge-base side is
+refused.
+
+| Command | `<Plug>` mapping | What it does |
+| --- | --- | --- |
+| `:[range]ReviewComment [text]` | `<Plug>(git-review-comment)` (normal and visual) | Add a comment on the line or range; prompts unless `text` is given. |
+| `:ReviewComments` | | Open the `Review` list. |
+| `:ReviewSave [file]` | | Write the comments, one per line, as `path:line: comment` or `path:start-end: comment`. Paths are relative to the repo root. The default file is `review.txt` in the git dir, which is per work tree and never committed. |
+| `:ReviewLoad [file]` | | Replace the `Review` list with the comments in the file. |
+| `:ReviewSubmit [number]` | | Post the comments as one **pending** review on the branch's PR, or PR `number`, through `gh api`. Only you see it until you submit it on GitHub. Defined only when `gh` is installed. |
+
+Line numbers are for the branch's version of the file. A checked-out PR with
+uncommitted changes can shift them, and GitHub rejects the whole review if a
+line is outside the PR's diff.
+
 No keys are bound; bind the `<Plug>` mappings yourself, for example:
 
 ```vim
 nmap <leader>cd <Plug>(git-review-diff-main)
 nmap <leader>cf <Plug>(git-review-changes-main)
 nmap <leader>cl <Plug>(git-review-log-main)
+nmap <leader>cc <Plug>(git-review-comment)
+xmap <leader>cc <Plug>(git-review-comment)
 ```
 
 ## Install
