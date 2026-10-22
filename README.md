@@ -1,7 +1,8 @@
-# git-review
+# git-extras
 
-Review the current branch the way a pull request shows it, and stage hunks in a
-vertical diff, on top of [vim-fugitive](https://github.com/tpope/vim-fugitive).
+Additions to [vim-fugitive](https://github.com/tpope/vim-fugitive): review a
+branch the way a pull request shows it, stage hunks in a vertical diff, collect
+review comments, and list open pull requests.
 
 "Main" is the repo's default branch: `origin/HEAD`, else `origin/main`,
 `origin/master`, `main` or `master`, resolved per repo when a command runs.
@@ -17,15 +18,30 @@ new remote branches.
 
 | Command | `<Plug>` mapping | What it does |
 | --- | --- | --- |
-| `:DiffThis` | `<Plug>(git-review-diff-this)` | `:Gvdiffsplit`: index on the left, working tree on the right. `dp` on a hunk in the working tree stages it, `do` in the index unstages it; `:w` the index buffer to keep it. |
-| `:DiffMain` | `<Plug>(git-review-diff-main)` | The current file at the merge-base, beside the working tree. |
-| `:ChangesMain [branch]` | `<Plug>(git-review-changes-main)` | Files changed since the merge-base, in the quickfix list (`:Git difftool --name-status`). Step with `:cnext`, `:DiffMain` on each. |
-| `:ReviewMain [branch]` | `<Plug>(git-review-review-main)` | One tab per changed file, each already a diff against the merge-base (`:Git difftool -y`). |
-| `:LogMain [branch] [args]` | `<Plug>(git-review-log-main)` | Commits on the branch that main lacks (`:Git log base..branch`). `<CR>` on a commit opens it. Extra args go to `git log`, e.g. `:LogMain -p -- %`. |
-| `:DiffClose` | `<Plug>(git-review-diff-close)` | Close the `fugitive://` windows in this tab and `:diffoff!`. |
+| `:DiffThis` | `<Plug>(git-extras-diff-this)` | `:Gvdiffsplit`: index on the left, working tree on the right. `dp` on a hunk in the working tree stages it, `do` in the index unstages it; `:w` the index buffer to keep it. |
+| `:DiffMain` | `<Plug>(git-extras-diff-main)` | The current file at the merge-base, beside the working tree. |
+| `:ChangesMain [branch]` | `<Plug>(git-extras-changes-main)` | Files changed since the merge-base, in the quickfix list (`:Git difftool --name-status`). Step with `:cnext`, `:DiffMain` on each. |
+| `:ReviewMain [branch]` | `<Plug>(git-extras-review-main)` | One tab per changed file, each already a diff against the merge-base (`:Git difftool -y`). |
+| `:LogMain [branch] [args]` | `<Plug>(git-extras-log-main)` | Commits on the branch that main lacks (`:Git log base..branch`). `<CR>` on a commit opens it. Extra args go to `git log`, e.g. `:LogMain -p -- %`. |
+| `:DiffClose` | `<Plug>(git-extras-diff-close)` | Close the `fugitive://` windows in this tab and `:diffoff!`. |
 
 Reviewing a PR: check it out (`gh pr checkout`), then `:ChangesMain` or
 `:ReviewMain`.
+
+## Open pull requests
+
+`:PRs [count]` lists the repo's open pull requests, most recently updated first
+(default 20), in a scratch buffer: number, review state (`draft`, `approved`,
+`changes`, `review`, or `-`), age, author, branch and title.
+
+| Key | What it does |
+| --- | --- |
+| `<CR>` | `gh pr checkout` the PR, then go back to where you were. `:ChangesMain` / `:ReviewMain` review it. |
+| `o` | Open the PR in the browser. |
+| `r` | Refresh. |
+| `q` | Close. |
+
+Defined only when [gh](https://cli.github.com) is installed.
 
 ## Review comments
 
@@ -36,7 +52,7 @@ refused.
 
 | Command | `<Plug>` mapping | What it does |
 | --- | --- | --- |
-| `:[range]ReviewComment [text]` | `<Plug>(git-review-comment)` (normal and visual) | Add a comment on the line or range; prompts unless `text` is given. |
+| `:[range]ReviewComment [text]` | `<Plug>(git-extras-comment)` (normal and visual) | Add a comment on the line or range; prompts unless `text` is given. |
 | `:ReviewComments` | | Open the `Review` list. |
 | `:ReviewSave [file]` | | Write the comments, one per line, as `path:line: comment` or `path:start-end: comment`. Paths are relative to the repo root. The default file is `review.txt` in the git dir, which is per work tree and never committed. |
 | `:ReviewLoad [file]` | | Replace the `Review` list with the comments in the file. |
@@ -49,18 +65,19 @@ line is outside the PR's diff.
 No keys are bound; bind the `<Plug>` mappings yourself, for example:
 
 ```vim
-nmap <leader>cd <Plug>(git-review-diff-main)
-nmap <leader>cf <Plug>(git-review-changes-main)
-nmap <leader>cl <Plug>(git-review-log-main)
-nmap <leader>cc <Plug>(git-review-comment)
-xmap <leader>cc <Plug>(git-review-comment)
+nmap <leader>cd <Plug>(git-extras-diff-main)
+nmap <leader>cf <Plug>(git-extras-changes-main)
+nmap <leader>cl <Plug>(git-extras-log-main)
+nmap <leader>cc <Plug>(git-extras-comment)
+xmap <leader>cc <Plug>(git-extras-comment)
 ```
 
 ## Install
 
 Requires vim-fugitive; without it the plugin warns once and defines nothing.
+`:PRs` and `:ReviewSubmit` also need `gh`, and are left out without it.
 
 ```vim
 Plug 'tpope/vim-fugitive'
-Plug 'roumail/git-review'
+Plug 'roumail/git-extras'
 ```

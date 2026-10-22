@@ -7,7 +7,7 @@ let s:title = 'Review'
 
 function! s:error(msg) abort
   echohl ErrorMsg
-  echomsg 'git-review: ' . a:msg
+  echomsg 'git-extras: ' . a:msg
   echohl None
 endfunction
 
@@ -40,13 +40,13 @@ function! s:repo_path() abort
 endfunction
 
 " Prompts for the comment unless text is given
-function! git_review#comments#add(line1, line2, text) abort
+function! git_extras#comments#add(line1, line2, text) abort
   let l:path = s:repo_path()
   if empty(l:path)
     call s:error('not a file in a git work tree')
     return
   endif
-  if @% =~# '^fugitive://' && git_review#is_base(FugitiveParse(@%)[0])
+  if @% =~# '^fugitive://' && git_extras#is_base(FugitiveParse(@%)[0])
     call s:error('comment on the branch side of the diff, not the merge-base')
     return
   endif
@@ -66,7 +66,7 @@ function! git_review#comments#add(line1, line2, text) abort
 endfunction
 
 " Make the 'Review' list current and open it
-function! git_review#comments#open() abort
+function! git_extras#comments#open() abort
   let l:nr = getqflist({'id': s:list_id(), 'nr': 0}).nr
   execute 'silent chistory' l:nr
   copen
@@ -98,7 +98,7 @@ function! s:file(file) abort
   return empty(l:gitdir) ? '' : l:gitdir . '/review.txt'
 endfunction
 
-function! git_review#comments#save(file) abort
+function! git_extras#comments#save(file) abort
   let l:file = s:file(a:file)
   if empty(FugitiveWorkTree()) || empty(l:file)
     call s:error('not in a git work tree')
@@ -112,7 +112,7 @@ function! git_review#comments#save(file) abort
 endfunction
 
 " Replaces the 'Review' list with the comments in the file
-function! git_review#comments#load(file) abort
+function! git_extras#comments#load(file) abort
   let l:file = s:file(a:file)
   let l:worktree = FugitiveWorkTree()
   if empty(l:worktree) || empty(l:file)
@@ -137,12 +137,12 @@ function! git_review#comments#load(file) abort
     call add(l:items, l:item)
   endfor
   call setqflist([], 'r', {'id': s:list_id(), 'items': l:items})
-  call git_review#comments#open()
+  call git_extras#comments#open()
 endfunction
 
 " Posts the comments as one pending review on a PR (the current branch's, or
 " number), so you can check them on GitHub and submit there or with gh.
-function! git_review#comments#submit(number) abort
+function! git_extras#comments#submit(number) abort
   let l:worktree = FugitiveWorkTree()
   if empty(l:worktree)
     call s:error('not in a git work tree')

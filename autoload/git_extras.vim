@@ -10,14 +10,14 @@ endfunction
 
 function! s:error(msg) abort
   echohl ErrorMsg
-  echomsg 'git-review: ' . a:msg
+  echomsg 'git-extras: ' . a:msg
   echohl None
 endfunction
 
 " The default branch as a ref: origin/HEAD, else main or master. The remote
 " ref is preferred, since the local branch is often stale after a fetch or a
 " `gh pr checkout`.
-function! git_review#main_ref() abort
+function! git_extras#main_ref() abort
   let l:head = s:git(['symbolic-ref', '--short', 'refs/remotes/origin/HEAD'])
   if !empty(l:head)
     return l:head[0]
@@ -43,7 +43,7 @@ function! s:base(branch) abort
     call s:error('unknown branch ' . l:branch . ' (:Git fetch?)')
     return ''
   endif
-  let l:main = git_review#main_ref()
+  let l:main = git_extras#main_ref()
   if empty(l:main)
     call s:error('no origin/HEAD, main or master found')
     return ''
@@ -62,11 +62,11 @@ let s:bases = {}
 
 " Whether a fugitive revision ('<commit>:<path>') is a merge-base we diffed
 " against
-function! git_review#is_base(rev) abort
+function! git_extras#is_base(rev) abort
   return has_key(s:bases, matchstr(a:rev, '^\x\{40,}'))
 endfunction
 
-function! git_review#diff_this() abort
+function! git_extras#diff_this() abort
   Gvdiffsplit
 endfunction
 
@@ -74,7 +74,7 @@ function! s:is_commit(rev) abort
   return s:git(['rev-parse', '--verify', '--quiet', a:rev . '^{commit}']) isnot v:null
 endfunction
 
-function! git_review#diff_main() abort
+function! git_extras#diff_main() abort
   let l:base = s:base('')
   if !empty(l:base)
     execute 'Gvdiffsplit' l:base
@@ -83,14 +83,14 @@ endfunction
 
 " With a branch, diffs are merge-base..branch; without, merge-base against the
 " working tree, so uncommitted changes show too.
-function! git_review#changes_main(branch) abort
+function! git_extras#changes_main(branch) abort
   let l:base = s:base(a:branch)
   if !empty(l:base)
     execute 'Git difftool --name-status' l:base a:branch
   endif
 endfunction
 
-function! git_review#review_main(branch) abort
+function! git_extras#review_main(branch) abort
   let l:base = s:base(a:branch)
   if !empty(l:base)
     execute 'Git difftool -y' l:base a:branch
@@ -98,7 +98,7 @@ function! git_review#review_main(branch) abort
 endfunction
 
 " A first arg that names a commit is the branch; the rest go to git log.
-function! git_review#log_main(args) abort
+function! git_extras#log_main(args) abort
   let l:first = matchstr(a:args, '^\S\+')
   let l:branch = 'HEAD'
   let l:rest = a:args
@@ -113,7 +113,7 @@ function! git_review#log_main(args) abort
 endfunction
 
 " Local and remote branches, most recent commit first
-function! git_review#complete_branch(lead, cmdline, pos) abort
+function! git_extras#complete_branch(lead, cmdline, pos) abort
   let l:refs = s:git(['for-each-ref', '--sort=-committerdate',
         \ '--format=%(refname)', 'refs/heads', 'refs/remotes'])
   if l:refs is v:null
@@ -126,14 +126,14 @@ function! git_review#complete_branch(lead, cmdline, pos) abort
 endfunction
 
 " Branch for the first argument, files after it
-function! git_review#complete_log(lead, cmdline, pos) abort
+function! git_extras#complete_log(lead, cmdline, pos) abort
   if strpart(a:cmdline, 0, a:pos) =~# '^\S\+\s\+\S*$'
-    return git_review#complete_branch(a:lead, a:cmdline, a:pos)
+    return git_extras#complete_branch(a:lead, a:cmdline, a:pos)
   endif
   return getcompletion(a:lead, 'file')
 endfunction
 
-function! git_review#diff_close() abort
+function! git_extras#diff_close() abort
   for l:win in reverse(range(1, winnr('$')))
     if bufname(winbufnr(l:win)) =~# '^fugitive://' && winnr('$') > 1
       execute l:win . 'close'
