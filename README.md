@@ -24,12 +24,9 @@ Reviewing a PR: check it out (`gh pr checkout`), then `:ChangesMain` or
 No keys are bound; bind the `<Plug>` mappings yourself, for example:
 
 ```vim
-nmap <leader>gs <Plug>(git-review-diff-this)
-nmap <leader>gm <Plug>(git-review-diff-main)
-nmap <leader>gc <Plug>(git-review-changes-main)
-nmap <leader>gM <Plug>(git-review-review-main)
-nmap <leader>gh <Plug>(git-review-log-main)
-nmap <leader>gq <Plug>(git-review-diff-close)
+nmap <leader>cd <Plug>(git-review-diff-main)
+nmap <leader>cf <Plug>(git-review-changes-main)
+nmap <leader>cl <Plug>(git-review-log-main)
 ```
 
 ## Install
