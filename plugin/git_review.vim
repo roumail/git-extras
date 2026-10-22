@@ -24,12 +24,17 @@ function! s:init() abort
   command! DiffThis call git_review#diff_this()
   " Current file at the merge-base with main | working tree (what the PR changes)
   command! DiffMain call git_review#diff_main()
+  " The commands below take an optional branch (default HEAD), e.g.
+  " origin/feature, to review it without checking it out.
   " Changed files since the merge-base with main, in the quickfix list
-  command! ChangesMain call git_review#changes_main()
+  command! -nargs=? -complete=customlist,git_review#complete_branch
+        \ ChangesMain call git_review#changes_main(<q-args>)
   " One tab per changed file, each a diff against the merge-base with main
-  command! ReviewMain call git_review#review_main()
-  " Commits on this branch that main doesn't have; extra args go to git log
-  command! -nargs=* -complete=file LogMain call git_review#log_main(<q-args>)
+  command! -nargs=? -complete=customlist,git_review#complete_branch
+        \ ReviewMain call git_review#review_main(<q-args>)
+  " Commits on the branch that main doesn't have; further args go to git log
+  command! -nargs=* -complete=customlist,git_review#complete_log
+        \ LogMain call git_review#log_main(<q-args>)
   " Close the fugitive side of the diff in this tab and turn diff mode off
   command! DiffClose call git_review#diff_close()
 

@@ -9,13 +9,19 @@ Diffs are against the **merge-base** of `HEAD` and main, so they show only
 what this branch changes, not what landed on main since it forked. They
 include uncommitted changes.
 
+`:ChangesMain`, `:ReviewMain` and `:LogMain` also take a branch, local or
+remote, to review it without checking it out: `:ReviewMain origin/feature`.
+Diffs are then from that branch's merge-base with main to its last commit.
+`<Tab>` completes branches, most recent first. Run `:Git fetch` first to see
+new remote branches.
+
 | Command | `<Plug>` mapping | What it does |
 | --- | --- | --- |
 | `:DiffThis` | `<Plug>(git-review-diff-this)` | `:Gvdiffsplit`: index on the left, working tree on the right. `dp` on a hunk in the working tree stages it, `do` in the index unstages it; `:w` the index buffer to keep it. |
 | `:DiffMain` | `<Plug>(git-review-diff-main)` | The current file at the merge-base, beside the working tree. |
-| `:ChangesMain` | `<Plug>(git-review-changes-main)` | Files changed since the merge-base, in the quickfix list (`:Git difftool --name-status`). Step with `:cnext`, `:DiffMain` on each. |
-| `:ReviewMain` | `<Plug>(git-review-review-main)` | One tab per changed file, each already a diff against the merge-base (`:Git difftool -y`). |
-| `:LogMain [args]` | `<Plug>(git-review-log-main)` | Commits on this branch that main lacks (`:Git log base..HEAD`). `<CR>` on a commit opens it. Extra args go to `git log`, e.g. `:LogMain -p -- %`. |
+| `:ChangesMain [branch]` | `<Plug>(git-review-changes-main)` | Files changed since the merge-base, in the quickfix list (`:Git difftool --name-status`). Step with `:cnext`, `:DiffMain` on each. |
+| `:ReviewMain [branch]` | `<Plug>(git-review-review-main)` | One tab per changed file, each already a diff against the merge-base (`:Git difftool -y`). |
+| `:LogMain [branch] [args]` | `<Plug>(git-review-log-main)` | Commits on the branch that main lacks (`:Git log base..branch`). `<CR>` on a commit opens it. Extra args go to `git log`, e.g. `:LogMain -p -- %`. |
 | `:DiffClose` | `<Plug>(git-review-diff-close)` | Close the `fugitive://` windows in this tab and `:diffoff!`. |
 
 Reviewing a PR: check it out (`gh pr checkout`), then `:ChangesMain` or
