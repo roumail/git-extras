@@ -27,9 +27,6 @@ function! s:init() abort
   command! -bang DiffThis call git_extras#diff_this(<bang>0)
   " The commands below take an optional branch (default HEAD), e.g.
   " origin/feature, to review it without checking it out.
-  " Changed files since the merge-base with main, in the quickfix list
-  command! -nargs=? -complete=customlist,git_extras#complete_branch
-        \ BranchFiles call git_extras#branch_files(<q-args>)
   " One tab per changed file, each a diff against the merge-base with main
   command! -nargs=? -complete=customlist,git_extras#complete_branch
         \ BranchDiff call git_extras#branch_diff(<q-args>)
@@ -59,7 +56,6 @@ function! s:init() abort
 
   nnoremap <Plug>(git-extras-diff-this) <Cmd>DiffThis<CR>
   nnoremap <Plug>(git-extras-diff-main) <Cmd>DiffThis!<CR>
-  nnoremap <Plug>(git-extras-branch-files) <Cmd>BranchFiles<CR>
   nnoremap <Plug>(git-extras-branch-diff) <Cmd>BranchDiff<CR>
   nnoremap <Plug>(git-extras-branch-commits) <Cmd>BranchCommits<CR>
   nnoremap <Plug>(git-extras-diff-close) <Cmd>DiffClose<CR>

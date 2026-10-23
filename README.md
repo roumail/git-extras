@@ -10,8 +10,8 @@ Diffs are against the **merge-base** of `HEAD` and main, so they show only
 what this branch changes, not what landed on main since it forked. They
 include uncommitted changes.
 
-The `:Branch*` commands show the branch three ways, like a PR's tabs on
-GitHub: the files it changes, their diffs, and its commits. They take a
+The `:Branch*` commands show the branch like a PR's tabs on GitHub: its
+changed files as diffs, and its commits. They take a
 branch, local or remote, to review it without checking it out:
 `:BranchDiff origin/feature`.
 Diffs are then from that branch's merge-base with main to its last commit.
@@ -22,13 +22,12 @@ new remote branches.
 | --- | --- | --- |
 | `:DiffThis` | `<Plug>(git-extras-diff-this)` | `:Gvdiffsplit`: index on the left, working tree on the right. `dp` on a hunk in the working tree stages it, `do` in the index unstages it; `:w` the index buffer to keep it. |
 | `:DiffThis!` | `<Plug>(git-extras-diff-main)` | The current file at the merge-base on the left, working tree on the right: what the branch changes in it. |
-| `:BranchFiles [branch]` | `<Plug>(git-extras-branch-files)` | Files changed since the merge-base, in the quickfix list (`:Git difftool --name-status`). Step with `:cnext`, `:DiffThis!` on each. |
 | `:BranchDiff [branch]` | `<Plug>(git-extras-branch-diff)` | One tab per changed file, each already a diff against the merge-base (`:Git difftool -y`). |
 | `:BranchCommits [branch] [args]` | `<Plug>(git-extras-branch-commits)` | Commits on the branch that main lacks (`:Git log base..branch`). `<CR>` on a commit opens it. Extra args go to `git log`, e.g. `:BranchCommits --stat` or `:BranchCommits -- %`. |
 | `:DiffClose` | `<Plug>(git-extras-diff-close)` | Close the `fugitive://` windows in this tab and `:diffoff!`. |
 
-Reviewing a PR: check it out (`gh pr checkout`), then `:BranchFiles` or
-`:BranchDiff`.
+Reviewing a PR: check it out (`gh pr checkout`), then `:BranchDiff` and
+`:BranchCommits`.
 
 ## Open pull requests
 
@@ -38,7 +37,7 @@ Reviewing a PR: check it out (`gh pr checkout`), then `:BranchFiles` or
 
 | Key | What it does |
 | --- | --- |
-| `<CR>` | `gh pr checkout` the PR, then go back to where you were. `:BranchFiles` / `:BranchDiff` review it. |
+| `<CR>` | `gh pr checkout` the PR, then go back to where you were. `:BranchDiff` / `:BranchCommits` review it. |
 | `o` | Open the PR in the browser. |
 | `r` | Refresh. |
 | `q` | Close. |
@@ -48,7 +47,7 @@ Defined only when [gh](https://cli.github.com) is installed.
 ## Review comments
 
 Comments collect in their own quickfix list, titled `Review`, so they don't mix
-with `:BranchFiles` or grep results. A comment is on a line or a range, on the
+with `:Git difftool` or grep results. A comment is on a line or a range, on the
 branch side of a diff (or a file in the work tree); the merge-base side is
 refused.
 
@@ -68,7 +67,6 @@ No keys are bound; bind the `<Plug>` mappings yourself, for example:
 
 ```vim
 nmap <leader>cd <Plug>(git-extras-diff-main)
-nmap <leader>cf <Plug>(git-extras-branch-files)
 nmap <leader>cl <Plug>(git-extras-branch-commits)
 nmap <leader>cc <Plug>(git-extras-comment)
 xmap <leader>cc <Plug>(git-extras-comment)

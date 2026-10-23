@@ -1,5 +1,5 @@
 " Review comments live in their own quickfix list, titled 'Review', so they
-" don't mix with :BranchFiles or grep results. Each entry is a repo path, a
+" don't mix with :Git difftool or grep results. Each entry is a repo path, a
 " line (or range) on the branch side, and the comment. Saved as
 " `path:line: comment` or `path:start-end: comment`, one per line.
 

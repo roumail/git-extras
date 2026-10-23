@@ -94,13 +94,6 @@ endfunction
 
 " With a branch, diffs are merge-base..branch; without, merge-base against the
 " working tree, so uncommitted changes show too.
-function! git_extras#branch_files(branch) abort
-  let l:base = s:base(a:branch)
-  if !empty(l:base)
-    execute 'Git difftool --name-status' l:base a:branch
-  endif
-endfunction
-
 function! git_extras#branch_diff(branch) abort
   let l:base = s:base(a:branch)
   if !empty(l:base)
