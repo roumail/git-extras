@@ -1,5 +1,5 @@
 " Review comments live in their own quickfix list, titled 'Review', so they
-" don't mix with :ChangesMain or grep results. Each entry is a repo path, a
+" don't mix with :BranchFiles or grep results. Each entry is a repo path, a
 " line (or range) on the branch side, and the comment. Saved as
 " `path:line: comment` or `path:start-end: comment`, one per line.
 
@@ -148,7 +148,7 @@ function! git_extras#comments#submit(number) abort
     call s:error('not in a git work tree')
     return
   endif
-  if !git_extras#require_remote(':ReviewSubmit')
+  if !git_extras#require_remote(':CommentsSubmit')
     return
   endif
   let l:comments = s:comments()

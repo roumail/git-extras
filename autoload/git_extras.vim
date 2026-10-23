@@ -76,31 +76,32 @@ function! git_extras#is_base(rev) abort
   return has_key(s:bases, matchstr(a:rev, '^\x\{40,}'))
 endfunction
 
-function! git_extras#diff_this() abort
-  Gvdiffsplit
-endfunction
-
-function! s:is_commit(rev) abort
-  return s:git(['rev-parse', '--verify', '--quiet', a:rev . '^{commit}']) isnot v:null
-endfunction
-
-function! git_extras#diff_main() abort
+" Index | working tree; with bang, the merge-base with main | working tree
+function! git_extras#diff_this(bang) abort
+  if !a:bang
+    Gvdiffsplit
+    return
+  endif
   let l:base = s:base('')
   if !empty(l:base)
     execute 'Gvdiffsplit' l:base
   endif
 endfunction
 
+function! s:is_commit(rev) abort
+  return s:git(['rev-parse', '--verify', '--quiet', a:rev . '^{commit}']) isnot v:null
+endfunction
+
 " With a branch, diffs are merge-base..branch; without, merge-base against the
 " working tree, so uncommitted changes show too.
-function! git_extras#changes_main(branch) abort
+function! git_extras#branch_files(branch) abort
   let l:base = s:base(a:branch)
   if !empty(l:base)
     execute 'Git difftool --name-status' l:base a:branch
   endif
 endfunction
 
-function! git_extras#review_main(branch) abort
+function! git_extras#branch_diff(branch) abort
   let l:base = s:base(a:branch)
   if !empty(l:base)
     execute 'Git difftool -y' l:base a:branch
@@ -108,9 +109,7 @@ function! git_extras#review_main(branch) abort
 endfunction
 
 " A first arg that names a commit is the branch; the rest go to git log.
-" With fzf.vim the commits open in its :Commits picker, same keys and preview;
-" bang is its fullscreen. Without it, in a fugitive :Git log buffer.
-function! git_extras#log_main(args, bang) abort
+function! git_extras#branch_commits(args) abort
   let l:first = matchstr(a:args, '^\S\+')
   let l:branch = 'HEAD'
   let l:rest = a:args
@@ -119,18 +118,8 @@ function! git_extras#log_main(args, bang) abort
     let l:rest = substitute(a:args, '^\S\+\s*', '', '')
   endif
   let l:base = s:base(l:branch)
-  if empty(l:base)
-    return
-  endif
-  let l:range = l:base . '..' . l:branch
-  if exists('g:loaded_fzf_vim')
-    " fzf.vim hands the args to the shell as is, and runs git from the repo
-    " root: expand % and # to absolute paths, quote the rest.
-    let l:words = map(split(l:rest), 'v:val =~# "^[%#]" ? expand(v:val . ":p") : v:val')
-    let l:opts = join(map([l:range] + l:words, 'shellescape(v:val)'))
-    call fzf#vim#commits(l:opts, fzf#vim#with_preview({'placeholder': ''}), a:bang)
-  else
-    execute 'Git log --oneline --decorate' l:range l:rest
+  if !empty(l:base)
+    execute 'Git log --oneline --decorate' l:base . '..' . l:branch l:rest
   endif
 endfunction
 
@@ -148,7 +137,7 @@ function! git_extras#complete_branch(lead, cmdline, pos) abort
 endfunction
 
 " Branch for the first argument, files after it
-function! git_extras#complete_log(lead, cmdline, pos) abort
+function! git_extras#complete_commits(lead, cmdline, pos) abort
   if strpart(a:cmdline, 0, a:pos) =~# '^\S\+\s\+\S*$'
     return git_extras#complete_branch(a:lead, a:cmdline, a:pos)
   endif

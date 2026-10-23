@@ -111,7 +111,7 @@ function! s:checkout() abort
   endif
   bwipe
   checktime
-  echo 'Checked out #' . l:number . ' (:ChangesMain, :ReviewMain to review)'
+  echo 'Checked out #' . l:number . ' (:BranchFiles, :BranchDiff to review)'
 endfunction
 
 function! s:browse() abort
