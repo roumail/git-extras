@@ -59,6 +59,10 @@ refused.
 | `:CommentsLoad [file]` | | Replace the `Review` list with the comments in the file; without `file`, the current branch's latest save. `<Tab>` lists the branch's saves, newest first, then files. |
 | `:CommentsSubmit [number]` | | Post the comments as one **pending** review on the branch's PR, or PR `number`, through `gh api`. Only you see it until you submit it on GitHub. Defined only when `gh` is installed. |
 
+Other plugins can read the comments with `git_extras#comments#list()`
+(`{path, line, start_line?, body}`, paths relative to the work tree) and empty
+them with `git_extras#comments#clear()`.
+
 Switching branches with unsaved comments (`:Git checkout`, `:PRs`) warns
 once; `:Comment` and `:CommentsSubmit` warn too. Nothing is cleared.
 

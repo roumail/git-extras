@@ -112,6 +112,17 @@ function! s:comments() abort
   return l:comments
 endfunction
 
+" Public: the comments as {path, line, start_line?, body}, paths relative to
+" the work tree, for other plugins (e.g. to send them to an AI agent)
+function! git_extras#comments#list() abort
+  return empty(FugitiveWorkTree()) || !s:find_id() ? [] : s:comments()
+endfunction
+
+" Public: empty the 'Review' list
+function! git_extras#comments#clear() abort
+  call setqflist([], 'r', {'id': s:list_id(), 'items': [], 'context': ''})
+endfunction
+
 " Saves for the current branch (the commit when detached), in the git dir
 " shared by all work trees, so never committed:
 " git-extras/comments/<branch>/<time>.txt
