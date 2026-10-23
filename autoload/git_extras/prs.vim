@@ -81,6 +81,9 @@ function! git_extras#prs#open(count) abort
     call s:error('not in a git work tree')
     return
   endif
+  if !git_extras#require_remote(':PRs')
+    return
+  endif
   execute 'silent edit' fnameescape('git-extras://prs/' . fnamemodify(l:worktree, ':t'))
   setlocal buftype=nofile bufhidden=wipe noswapfile nowrap nobuflisted
   let b:git_extras_worktree = l:worktree

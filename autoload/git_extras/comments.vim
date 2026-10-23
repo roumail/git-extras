@@ -148,6 +148,9 @@ function! git_extras#comments#submit(number) abort
     call s:error('not in a git work tree')
     return
   endif
+  if !git_extras#require_remote(':ReviewSubmit')
+    return
+  endif
   let l:comments = s:comments()
   if empty(l:comments)
     call s:error('no review comments')

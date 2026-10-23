@@ -14,6 +14,16 @@ function! s:error(msg) abort
   echohl None
 endfunction
 
+" gh finds the GitHub repo from the git remotes; without one it fails with
+" 'error parsing "owner" value'. Errors and returns 0 when there is none.
+function! git_extras#require_remote(command) abort
+  if empty(s:git(['remote']))
+    call s:error(a:command . ' needs the repo on GitHub, and it has no git remote')
+    return 0
+  endif
+  return 1
+endfunction
+
 " The default branch as a ref: origin/HEAD, else main or master. The remote
 " ref is preferred, since the local branch is often stale after a fetch or a
 " `gh pr checkout`.
