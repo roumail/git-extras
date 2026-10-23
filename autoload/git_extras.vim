@@ -108,7 +108,9 @@ function! git_extras#review_main(branch) abort
 endfunction
 
 " A first arg that names a commit is the branch; the rest go to git log.
-function! git_extras#log_main(args) abort
+" With fzf.vim the commits open in its :Commits picker, same keys and preview;
+" bang is its fullscreen. Without it, in a fugitive :Git log buffer.
+function! git_extras#log_main(args, bang) abort
   let l:first = matchstr(a:args, '^\S\+')
   let l:branch = 'HEAD'
   let l:rest = a:args
@@ -117,8 +119,18 @@ function! git_extras#log_main(args) abort
     let l:rest = substitute(a:args, '^\S\+\s*', '', '')
   endif
   let l:base = s:base(l:branch)
-  if !empty(l:base)
-    execute 'Git log --oneline --decorate' l:base . '..' . l:branch l:rest
+  if empty(l:base)
+    return
+  endif
+  let l:range = l:base . '..' . l:branch
+  if exists('g:loaded_fzf_vim')
+    " fzf.vim hands the args to the shell as is, and runs git from the repo
+    " root: expand % and # to absolute paths, quote the rest.
+    let l:words = map(split(l:rest), 'v:val =~# "^[%#]" ? expand(v:val . ":p") : v:val')
+    let l:opts = join(map([l:range] + l:words, 'shellescape(v:val)'))
+    call fzf#vim#commits(l:opts, fzf#vim#with_preview({'placeholder': ''}), a:bang)
+  else
+    execute 'Git log --oneline --decorate' l:range l:rest
   endif
 endfunction
 

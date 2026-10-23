@@ -33,9 +33,10 @@ function! s:init() abort
   " One tab per changed file, each a diff against the merge-base with main
   command! -nargs=? -complete=customlist,git_extras#complete_branch
         \ ReviewMain call git_extras#review_main(<q-args>)
-  " Commits on the branch that main doesn't have; further args go to git log
-  command! -nargs=* -complete=customlist,git_extras#complete_log
-        \ LogMain call git_extras#log_main(<q-args>)
+  " Commits on the branch that main doesn't have; further args go to git log.
+  " In fzf.vim's :Commits picker when installed (! for fullscreen).
+  command! -bang -nargs=* -complete=customlist,git_extras#complete_log
+        \ LogMain call git_extras#log_main(<q-args>, <bang>0)
   " Close the fugitive side of the diff in this tab and turn diff mode off
   command! DiffClose call git_extras#diff_close()
 

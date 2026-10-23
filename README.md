@@ -22,7 +22,7 @@ new remote branches.
 | `:DiffMain` | `<Plug>(git-extras-diff-main)` | The current file at the merge-base, beside the working tree. |
 | `:ChangesMain [branch]` | `<Plug>(git-extras-changes-main)` | Files changed since the merge-base, in the quickfix list (`:Git difftool --name-status`). Step with `:cnext`, `:DiffMain` on each. |
 | `:ReviewMain [branch]` | `<Plug>(git-extras-review-main)` | One tab per changed file, each already a diff against the merge-base (`:Git difftool -y`). |
-| `:LogMain [branch] [args]` | `<Plug>(git-extras-log-main)` | Commits on the branch that main lacks (`:Git log base..branch`). `<CR>` on a commit opens it. Extra args go to `git log`, e.g. `:LogMain -p -- %`. |
+| `:LogMain[!] [branch] [args]` | `<Plug>(git-extras-log-main)` | Commits on the branch that main lacks (`git log base..branch`). With [fzf.vim](https://github.com/junegunn/fzf.vim), in its `:Commits` picker: same preview and keys, `!` for fullscreen. Without it, in a `:Git log` buffer; `<CR>` on a commit opens it. Extra args go to `git log`, e.g. `:LogMain -- %` for the commits that touch this file. |
 | `:DiffClose` | `<Plug>(git-extras-diff-close)` | Close the `fugitive://` windows in this tab and `:diffoff!`. |
 
 Reviewing a PR: check it out (`gh pr checkout`), then `:ChangesMain` or
@@ -76,6 +76,8 @@ xmap <leader>cc <Plug>(git-extras-comment)
 
 Requires vim-fugitive; without it the plugin warns once and defines nothing.
 `:PRs` and `:ReviewSubmit` also need `gh`, and are left out without it.
+[fzf.vim](https://github.com/junegunn/fzf.vim) is optional; `:LogMain` uses
+its picker when installed.
 
 ```vim
 Plug 'tpope/vim-fugitive'
