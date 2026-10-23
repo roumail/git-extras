@@ -43,10 +43,10 @@ function! s:init() abort
         \ call git_extras#comments#add(<line1>, <line2>, <q-args>)
   " Open the 'Review' list
   command! Comments call git_extras#comments#open()
-  " Write the comments to a file (default: review.txt in the git dir) and
-  " load them back
+  " Write the comments to a file (default: a new timestamped save for the
+  " branch) and load them back (default: the branch's latest save)
   command! -nargs=? -complete=file CommentsSave call git_extras#comments#save(<q-args>)
-  command! -nargs=? -complete=file CommentsLoad call git_extras#comments#load(<q-args>)
+  command! -nargs=? -complete=customlist,git_extras#comments#complete_load CommentsLoad call git_extras#comments#load(<q-args>)
   if executable('gh')
     " Post the comments as a pending review on the branch's PR (or number)
     command! -nargs=? CommentsSubmit call git_extras#comments#submit(<q-args>)

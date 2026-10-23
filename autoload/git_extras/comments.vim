@@ -89,17 +89,55 @@ function! s:comments() abort
   return l:comments
 endfunction
 
-" Default file: review.txt in the git dir (per work tree, never committed)
-function! s:file(file) abort
+" Saves for the current branch (the commit when detached), in the git dir
+" shared by all work trees, so never committed:
+" git-extras/comments/<branch>/<time>.txt
+function! s:dir() abort
+  let l:common = FugitiveCommonDir()
+  let l:head = FugitiveHead(7)
+  return empty(l:common) || empty(l:head) ? ''
+        \ : l:common . '/git-extras/comments/' . l:head
+endfunction
+
+" The given file, else a new save for the branch, timestamped so they sort
+function! s:save_file(file) abort
   if !empty(a:file)
     return fnamemodify(a:file, ':p')
   endif
-  let l:gitdir = FugitiveGitDir()
-  return empty(l:gitdir) ? '' : l:gitdir . '/review.txt'
+  let l:dir = s:dir()
+  return empty(l:dir) ? '' : l:dir . '/' . strftime('%Y%m%d-%H%M%S') . '.txt'
+endfunction
+
+" The branch's save names (<time>.txt), newest first
+function! s:saves() abort
+  let l:dir = s:dir()
+  return empty(l:dir) ? []
+        \ : reverse(sort(map(glob(l:dir . '/*.txt', 1, 1), 'fnamemodify(v:val, ":t")')))
+endfunction
+
+" The given file, else the branch's latest save ('' when there is none). A
+" bare save name, as completed, is one of the branch's saves.
+function! s:load_file(file) abort
+  if index(s:saves(), a:file) >= 0
+    return s:dir() . '/' . a:file
+  elseif !empty(a:file)
+    return fnamemodify(a:file, ':p')
+  endif
+  let l:saves = s:saves()
+  return empty(l:saves) ? '' : s:dir() . '/' . l:saves[0]
+endfunction
+
+" The branch's saves, newest first; files once the arg looks like a path
+function! git_extras#comments#complete_load(lead, cmdline, pos) abort
+  if a:lead =~# '[/~.]'
+    return getcompletion(a:lead, 'file')
+  endif
+  return filter(s:saves(), 'stridx(v:val, a:lead) == 0')
+        \ + getcompletion(a:lead, 'file')
 endfunction
 
 function! git_extras#comments#save(file) abort
-  let l:file = s:file(a:file)
+  let l:file = s:save_file(a:file)
   if empty(FugitiveWorkTree()) || empty(l:file)
     call s:error('not in a git work tree')
     return
@@ -107,16 +145,21 @@ function! git_extras#comments#save(file) abort
   let l:lines = map(s:comments(), {_, c -> c.path . ':'
         \ . (has_key(c, 'start_line') ? c.start_line . '-' : '') . c.line
         \ . ': ' . c.body})
+  call mkdir(fnamemodify(l:file, ':h'), 'p')
   call writefile(l:lines, l:file)
   echo 'Saved ' . len(l:lines) . ' review comments to ' . fnamemodify(l:file, ':~')
 endfunction
 
 " Replaces the 'Review' list with the comments in the file
 function! git_extras#comments#load(file) abort
-  let l:file = s:file(a:file)
+  let l:file = s:load_file(a:file)
   let l:worktree = FugitiveWorkTree()
-  if empty(l:worktree) || empty(l:file)
+  if empty(l:worktree)
     call s:error('not in a git work tree')
+    return
+  endif
+  if empty(l:file)
+    call s:error('no saved comments for ' . FugitiveHead(7))
     return
   endif
   if !filereadable(l:file)
