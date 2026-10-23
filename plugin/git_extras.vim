@@ -61,6 +61,12 @@ function! s:init() abort
   nnoremap <Plug>(git-extras-diff-close) <Cmd>DiffClose<CR>
   nnoremap <Plug>(git-extras-comment) <Cmd>Comment<CR>
   xnoremap <Plug>(git-extras-comment) :Comment<CR>
+
+  " Warn after a :Git checkout that left unsaved comments from another branch
+  augroup git_extras
+    autocmd!
+    autocmd User FugitiveChanged call git_extras#comments#check()
+  augroup END
 endfunction
 
 if v:vim_did_enter

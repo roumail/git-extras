@@ -59,6 +59,9 @@ refused.
 | `:CommentsLoad [file]` | | Replace the `Review` list with the comments in the file; without `file`, the current branch's latest save. `<Tab>` lists the branch's saves, newest first, then files. |
 | `:CommentsSubmit [number]` | | Post the comments as one **pending** review on the branch's PR, or PR `number`, through `gh api`. Only you see it until you submit it on GitHub. Defined only when `gh` is installed. |
 
+Switching branches with unsaved comments (`:Git checkout`, `:PRs`) warns
+once; `:Comment` and `:CommentsSubmit` warn too. Nothing is cleared.
+
 Line numbers are for the branch's version of the file. A checked-out PR with
 uncommitted changes can shift them, and GitHub rejects the whole review if a
 line is outside the PR's diff.

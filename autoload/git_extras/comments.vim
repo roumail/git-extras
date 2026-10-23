@@ -1,7 +1,8 @@
 " Review comments live in their own quickfix list, titled 'Review', so they
 " don't mix with :Git difftool or grep results. Each entry is a repo path, a
 " line (or range) on the branch side, and the comment. Saved as
-" `path:line: comment` or `path:start-end: comment`, one per line.
+" `path:line: comment` or `path:start-end: comment`, one per line. The
+" list's context is the branch its unsaved comments are on, '' once saved.
 
 let s:title = 'Review'
 
@@ -11,14 +12,23 @@ function! s:error(msg) abort
   echohl None
 endfunction
 
-" The id of the 'Review' quickfix list, created if missing
-function! s:list_id() abort
+" The id of the 'Review' quickfix list, 0 if there is none
+function! s:find_id() abort
   for l:nr in range(1, getqflist({'nr': '$'}).nr)
     let l:info = getqflist({'nr': l:nr, 'title': 1, 'id': 0})
     if l:info.title ==# s:title
       return l:info.id
     endif
   endfor
+  return 0
+endfunction
+
+" The id of the 'Review' quickfix list, created if missing
+function! s:list_id() abort
+  let l:id = s:find_id()
+  if l:id
+    return l:id
+  endif
   " Without 'items', ' ' would only retitle the current list
   call setqflist([], ' ', {'title': s:title, 'items': []})
   return getqflist({'nr': '$', 'id': 0}).id
@@ -39,8 +49,20 @@ function! s:repo_path() abort
   return l:path
 endfunction
 
+" Warns when the unsaved comments are from another branch than HEAD
+function! git_extras#comments#check() abort
+  let l:id = s:find_id()
+  let l:branch = l:id ? getqflist({'id': l:id, 'context': 0}).context : ''
+  if type(l:branch) == v:t_string && !empty(l:branch) && l:branch !=# FugitiveHead(7)
+    echohl WarningMsg
+    echomsg 'git-extras: unsaved review comments from ' . l:branch . ' (:CommentsSave)'
+    echohl None
+  endif
+endfunction
+
 " Prompts for the comment unless text is given
 function! git_extras#comments#add(line1, line2, text) abort
+  call git_extras#comments#check()
   let l:path = s:repo_path()
   if empty(l:path)
     call s:error('not a file in a git work tree')
@@ -60,7 +82,8 @@ function! git_extras#comments#add(line1, line2, text) abort
   if a:line2 != a:line1
     let l:item.end_lnum = a:line2
   endif
-  call setqflist([], 'a', {'id': s:list_id(), 'items': [l:item]})
+  call setqflist([], 'a', {'id': s:list_id(), 'items': [l:item],
+        \ 'context': FugitiveHead(7)})
   redraw
   echo 'Review comments: ' . len(s:items())
 endfunction
@@ -147,6 +170,7 @@ function! git_extras#comments#save(file) abort
         \ . ': ' . c.body})
   call mkdir(fnamemodify(l:file, ':h'), 'p')
   call writefile(l:lines, l:file)
+  call setqflist([], 'a', {'id': s:list_id(), 'context': ''})
   echo 'Saved ' . len(l:lines) . ' review comments to ' . fnamemodify(l:file, ':~')
 endfunction
 
@@ -179,7 +203,7 @@ function! git_extras#comments#load(file) abort
     endif
     call add(l:items, l:item)
   endfor
-  call setqflist([], 'r', {'id': s:list_id(), 'items': l:items})
+  call setqflist([], 'r', {'id': s:list_id(), 'items': l:items, 'context': ''})
   call git_extras#comments#open()
 endfunction
 
@@ -194,6 +218,7 @@ function! git_extras#comments#submit(number) abort
   if !git_extras#require_remote(':CommentsSubmit')
     return
   endif
+  call git_extras#comments#check()
   let l:comments = s:comments()
   if empty(l:comments)
     call s:error('no review comments')

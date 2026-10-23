@@ -112,6 +112,7 @@ function! s:checkout() abort
   bwipe
   checktime
   echo 'Checked out #' . l:number . ' (:BranchDiff, :BranchCommits to review)'
+  call git_extras#comments#check()
 endfunction
 
 function! s:browse() abort
