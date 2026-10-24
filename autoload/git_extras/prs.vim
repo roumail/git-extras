@@ -52,12 +52,30 @@ function! s:age(iso) abort
         \ : (l:hours / 24 / 30) . 'mo'
 endfunction
 
-function! s:line(pr) abort
+" login -> readable name, from g:git_extras_pr_authors (default
+" ~/.config/gh-pr-authors.txt), one login:name per line; {} without the file
+function! s:authors() abort
+  let l:file = expand(get(g:, 'git_extras_pr_authors', '~/.config/gh-pr-authors.txt'))
+  let l:names = {}
+  if filereadable(l:file)
+    for l:line in readfile(l:file)
+      let l:m = matchlist(l:line, '^\s*\([^:#[:space:]]\+\)\s*:\s*\(.\{-}\)\s*$')
+      if !empty(l:m) && !empty(l:m[2])
+        let l:names[l:m[1]] = l:m[2]
+      endif
+    endfor
+  endif
+  return l:names
+endfunction
+
+" The name column is there only when the file names someone
+function! s:line(pr, names) abort
   let l:state = a:pr.isDraft ? 'draft'
         \ : get(s:states, type(a:pr.reviewDecision) == v:t_string ? a:pr.reviewDecision : '', '-')
   let l:author = type(a:pr.author) == v:t_dict ? a:pr.author.login : 'ghost'
-  return printf('#%-5d %-8s %-4s %-16.16s %-30.30s %s', a:pr.number, l:state,
-        \ s:age(a:pr.updatedAt), l:author, a:pr.headRefName, a:pr.title)
+  let l:name = empty(a:names) ? '' : printf('%-20.20s ', get(a:names, l:author, ''))
+  return printf('#%-5d %-8s %-4s %-16.16s %s%-30.30s %s', a:pr.number, l:state,
+        \ s:age(a:pr.updatedAt), l:author, l:name, a:pr.headRefName, a:pr.title)
 endfunction
 
 function! s:render() abort
@@ -67,10 +85,11 @@ function! s:render() abort
     return
   endif
   let l:prs = json_decode(l:out).data.repository.pullRequests.nodes
+  let l:names = s:authors()
   setlocal modifiable
   silent %delete _
   call setline(1, ['Open PRs (' . len(l:prs) . ')  <CR> checkout  o browser  r refresh  q close']
-        \ + map(copy(l:prs), 's:line(v:val)'))
+        \ + map(copy(l:prs), 's:line(v:val, l:names)'))
   setlocal nomodifiable nomodified
   call cursor(2, 1)
 endfunction

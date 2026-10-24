@@ -37,6 +37,14 @@ Reviewing a PR: check it out (`gh pr checkout`), then `:BranchDiff` and
 (default 20), in a scratch buffer: number, review state (`draft`, `approved`,
 `changes`, `review`, or `-`), age, author, branch and title.
 
+Authors' logins can get a readable name beside them, from a file of
+`login:name` lines, read on each refresh. The column is left out when the file
+doesn't exist, and blank for logins it doesn't name.
+
+```vim
+let g:git_extras_pr_authors = '~/.config/gh-pr-authors.txt'  " the default
+```
+
 | Key | What it does |
 | --- | --- |
 | `<CR>` | `gh pr checkout` the PR, then go back to where you were. `:BranchDiff` / `:BranchCommits` review it. |
