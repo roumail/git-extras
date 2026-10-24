@@ -71,6 +71,12 @@ function! git_extras#comments#submit(number) abort
     call s:error('no review comments')
     return
   endif
+  " Their lines were gone when loaded: they'd land on whatever is there now
+  let l:orphaned = len(filter(copy(l:comments), 'get(v:val, "orphaned")'))
+  if l:orphaned
+    call s:error(l:orphaned . ' comments whose lines are gone (W in :Comments); comment again where they belong, or drop them, first')
+    return
+  endif
   for l:c in l:comments
     let l:c.side = 'RIGHT'
     if has_key(l:c, 'start_line')

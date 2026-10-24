@@ -63,7 +63,7 @@ git:
 
 | Command | What it does |
 | --- | --- |
-| `:CommentsSubmit [number]` | Post the comments as one **pending** review on the branch's PR, or PR `number`, through `gh api`. Only you see it until you submit it on GitHub. Defined only when `gh` is installed. |
+| `:CommentsSubmit [number]` | Post the comments as one **pending** review on the branch's PR, or PR `number`, through `gh api`. Only you see it until you submit it on GitHub. Refused while any comment's lines are gone (`W` in `:Comments`, see vim-review's anchors). Defined only when `gh` is installed. |
 
 Line numbers are for the branch's version of the file. A checked-out PR with
 uncommitted changes can shift them, and GitHub rejects the whole review if a
