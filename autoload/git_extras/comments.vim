@@ -1,7 +1,8 @@
 " Review comments live in their own quickfix list, titled 'Review', so they
 " don't mix with :Git difftool or grep results. Each entry is a repo path, a
 " line (or range) on the branch side, and the comment. Saved as
-" `path:line: comment` or `path:start-end: comment`, one per line. The
+" `path:line: comment` or `path:start-end: comment`, one per line, with
+" each further line of a multi-line comment after it, tab-indented. The
 " list's context is the branch its unsaved comments are on, '' once saved.
 
 let s:title = 'Review'
@@ -60,31 +61,96 @@ function! git_extras#comments#check() abort
   endif
 endfunction
 
-" Prompts for the comment unless text is given
-function! git_extras#comments#add(line1, line2, text) abort
+" The quickfix item (without text) for a comment on lines line1-line2 of the
+" current buffer, and its `path:line` or `path:start-end` label; {} when the
+" buffer can't take comments
+function! s:target(line1, line2) abort
   call git_extras#comments#check()
   let l:path = s:repo_path()
   if empty(l:path)
     call s:error('not a file in a git work tree')
-    return
+    return {}
   endif
   if @% =~# '^fugitive://' && git_extras#is_base(FugitiveParse(@%)[0])
     call s:error('comment on the branch side of the diff, not the merge-base')
-    return
+    return {}
   endif
-  let l:range = a:line1 == a:line2 ? a:line1 : a:line1 . '-' . a:line2
-  let l:text = empty(a:text) ? input('Comment ' . l:path . ':' . l:range . ': ') : a:text
-  if empty(l:text)
-    return
-  endif
-  let l:item = {'filename': FugitiveWorkTree() . '/' . l:path,
-        \ 'lnum': a:line1, 'text': l:text}
+  let l:item = {'filename': FugitiveWorkTree() . '/' . l:path, 'lnum': a:line1}
   if a:line2 != a:line1
     let l:item.end_lnum = a:line2
   endif
-  call setqflist([], 'a', {'id': s:list_id(), 'items': [l:item],
+  let l:range = a:line1 == a:line2 ? a:line1 : a:line1 . '-' . a:line2
+  return {'item': l:item, 'label': l:path . ':' . l:range}
+endfunction
+
+" Appends the item to the 'Review' list; returns its index in the list
+function! s:append(item) abort
+  call setqflist([], 'a', {'id': s:list_id(), 'items': [a:item],
         \ 'context': FugitiveHead(7)})
+  return len(s:items()) - 1
+endfunction
+
+" Prompts for the comment unless text is given
+function! git_extras#comments#add(line1, line2, text) abort
+  let l:target = s:target(a:line1, a:line2)
+  if empty(l:target)
+    return
+  endif
+  let l:text = empty(a:text) ? input('Comment ' . l:target.label . ': ') : a:text
+  if empty(l:text)
+    return
+  endif
+  call s:append(extend(l:target.item, {'text': l:text}))
   redraw
+  echo 'Review comments: ' . len(s:items())
+endfunction
+
+" Writes the comment in a buffer instead of at the prompt, for longer or
+" multi-line ones: a split below, starting with the text if given. :w adds
+" the comment (writing again updates it), :q! drops an unwritten one.
+function! git_extras#comments#edit(line1, line2, text) abort
+  let l:target = s:target(a:line1, a:line2)
+  if empty(l:target)
+    return
+  endif
+  execute 'belowright' get(g:, 'git_extras_comment_height', 10) . 'new'
+  setlocal buftype=acwrite bufhidden=wipe noswapfile filetype=markdown
+  execute 'file' fnameescape('git-extras://comment/' . l:target.label)
+  let b:git_extras_comment = {'item': l:target.item, 'list': s:list_id(), 'index': -1}
+  if !empty(a:text)
+    call setline(1, a:text)
+  endif
+  setlocal nomodified
+  augroup git_extras_comment
+    autocmd! * <buffer>
+    autocmd BufWriteCmd <buffer> call s:write_comment()
+  augroup END
+  startinsert!
+endfunction
+
+" BufWriteCmd of the comment buffer: adds the comment, or updates the one
+" an earlier write added
+function! s:write_comment() abort
+  let l:c = b:git_extras_comment
+  let l:lines = getline(1, '$')
+  while !empty(l:lines) && l:lines[-1] =~# '^\s*$'
+    call remove(l:lines, -1)
+  endwhile
+  if empty(l:lines)
+    call s:error('empty comment, not added')
+    return
+  endif
+  let l:item = extend(copy(l:c.item), {'text': join(l:lines, "\n")})
+  " The 'Review' list may have been loaded over or cleared since
+  let l:items = l:c.list == s:find_id() ? s:items() : []
+  if l:c.index < 0 || l:c.index >= len(l:items)
+    let l:c.list = s:list_id()
+    let l:c.index = s:append(l:item)
+  else
+    let l:items[l:c.index] = l:item
+    call setqflist([], 'r', {'id': l:c.list, 'items': l:items})
+  endif
+  setlocal nomodified
   echo 'Review comments: ' . len(s:items())
 endfunction
 
@@ -176,9 +242,14 @@ function! git_extras#comments#save(file) abort
     call s:error('not in a git work tree')
     return
   endif
-  let l:lines = map(s:comments(), {_, c -> c.path . ':'
-        \ . (has_key(c, 'start_line') ? c.start_line . '-' : '') . c.line
-        \ . ': ' . c.body})
+  let l:lines = []
+  for l:c in s:comments()
+    let l:body = split(l:c.body, "\n", 1)
+    call add(l:lines, l:c.path . ':'
+          \ . (has_key(l:c, 'start_line') ? l:c.start_line . '-' : '') . l:c.line
+          \ . ': ' . l:body[0])
+    call extend(l:lines, map(l:body[1:], '"\t" . v:val'))
+  endfor
   call mkdir(fnamemodify(l:file, ':h'), 'p')
   call writefile(l:lines, l:file)
   call setqflist([], 'a', {'id': s:list_id(), 'context': ''})
@@ -203,6 +274,11 @@ function! git_extras#comments#load(file) abort
   endif
   let l:items = []
   for l:line in readfile(l:file)
+    " A tab-indented line continues the previous comment
+    if l:line[0] ==# "\t" && !empty(l:items)
+      let l:items[-1].text .= "\n" . l:line[1:]
+      continue
+    endif
     let l:m = matchlist(l:line, '^\(.\{-}\):\(\d\+\)\%(-\(\d\+\)\)\=: \(.*\)$')
     if empty(l:m)
       continue

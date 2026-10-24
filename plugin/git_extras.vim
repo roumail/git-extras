@@ -38,9 +38,9 @@ function! s:init() abort
 
   " Review comments, in their own quickfix list titled 'Review'
   " Comment on the line or range, on the branch side of a diff; prompts
-  " unless the comment is given
-  command! -range -nargs=* Comment
-        \ call git_extras#comments#add(<line1>, <line2>, <q-args>)
+  " unless the comment is given. With !, write it in a buffer (:w adds it)
+  command! -bang -range -nargs=* Comment
+        \ call git_extras#comments#{<bang>0 ? 'edit' : 'add'}(<line1>, <line2>, <q-args>)
   " Open the 'Review' list
   command! Comments call git_extras#comments#open()
   " Write the comments to a file (default: a new timestamped save for the
@@ -61,6 +61,8 @@ function! s:init() abort
   nnoremap <Plug>(git-extras-diff-close) <Cmd>DiffClose<CR>
   nnoremap <Plug>(git-extras-comment) <Cmd>Comment<CR>
   xnoremap <Plug>(git-extras-comment) :Comment<CR>
+  nnoremap <Plug>(git-extras-comment-edit) <Cmd>Comment!<CR>
+  xnoremap <Plug>(git-extras-comment-edit) :Comment!<CR>
 
   " Warn after a :Git checkout that left unsaved comments from another branch
   augroup git_extras

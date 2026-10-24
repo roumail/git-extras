@@ -54,8 +54,9 @@ refused.
 | Command | `<Plug>` mapping | What it does |
 | --- | --- | --- |
 | `:[range]Comment [text]` | `<Plug>(git-extras-comment)` (normal and visual) | Add a comment on the line or range; prompts unless `text` is given. |
+| `:[range]Comment! [text]` | `<Plug>(git-extras-comment-edit)` (normal and visual) | Write the comment in a markdown buffer split below (`g:git_extras_comment_height`, default 10), starting with `text` if given, for longer or multi-line comments. `:w` adds it, writing again updates it, `:q!` before writing drops it. |
 | `:Comments` | | Open the `Review` list. |
-| `:CommentsSave [file]` | | Write the comments, one per line, as `path:line: comment` or `path:start-end: comment`. Paths are relative to the repo root. Without `file`, each save is a new file named for the branch and time, `git-extras/comments/<branch>/<YYYYmmdd-HHMMSS>.txt` in the git dir, so it is never committed and reviews of different branches stay apart. |
+| `:CommentsSave [file]` | | Write the comments, one per line, as `path:line: comment` or `path:start-end: comment`, the further lines of a multi-line comment after it, tab-indented. Paths are relative to the repo root. Without `file`, each save is a new file named for the branch and time, `git-extras/comments/<branch>/<YYYYmmdd-HHMMSS>.txt` in the git dir, so it is never committed and reviews of different branches stay apart. |
 | `:CommentsLoad [file]` | | Replace the `Review` list with the comments in the file; without `file`, the current branch's latest save. `<Tab>` lists the branch's saves, newest first, then files. |
 | `:CommentsSubmit [number]` | | Post the comments as one **pending** review on the branch's PR, or PR `number`, through `gh api`. Only you see it until you submit it on GitHub. Defined only when `gh` is installed. |
 
