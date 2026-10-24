@@ -1,7 +1,9 @@
 " git-extras: additions to vim-fugitive. Review a branch against the repo's
-" default branch (main/master), stage hunks in a vertical diff, collect review
-" comments, and list open PRs. Commands and <Plug> mappings only; no keys are
-" bound here. Requires tpope/vim-fugitive; the GitHub commands need gh.
+" default branch (main/master), stage hunks in a vertical diff, and list open
+" PRs. With roumail/vim-review, its review comments go on fugitive diffs, are
+" saved per branch and post to the PR. Commands and <Plug> mappings only; no
+" keys are bound here. Requires tpope/vim-fugitive; the GitHub commands need
+" gh.
 if exists('g:loaded_git_extras')
   finish
 endif
@@ -36,20 +38,7 @@ function! s:init() abort
   " Close the fugitive side of the diff in this tab and turn diff mode off
   command! DiffClose call git_extras#diff_close()
 
-  " Review comments, in their own quickfix list titled 'Review'
-  " Comment on the line or range, on the branch side of a diff; prompts
-  " unless the comment is given. With !, write it in a buffer (:w adds it)
-  command! -bang -range -nargs=* Comment
-        \ call git_extras#comments#{<bang>0 ? 'edit' : 'add'}(<line1>, <line2>, <q-args>)
-  " Open the 'Review' list
-  command! Comments call git_extras#comments#open()
-  " Write the comments to a file (default: a new timestamped save for the
-  " branch) and load them back (default: the branch's latest save)
-  command! -nargs=? -complete=file CommentsSave call git_extras#comments#save(<q-args>)
-  command! -nargs=? -complete=customlist,git_extras#comments#complete_load CommentsLoad call git_extras#comments#load(<q-args>)
   if executable('gh')
-    " Post the comments as a pending review on the branch's PR (or number)
-    command! -nargs=? CommentsSubmit call git_extras#comments#submit(<q-args>)
     " Open PRs (default 20), latest first; <CR> checks one out
     command! -nargs=? PRs call git_extras#prs#open(<q-args>)
   endif
@@ -59,16 +48,21 @@ function! s:init() abort
   nnoremap <Plug>(git-extras-branch-diff) <Cmd>BranchDiff<CR>
   nnoremap <Plug>(git-extras-branch-commits) <Cmd>BranchCommits<CR>
   nnoremap <Plug>(git-extras-diff-close) <Cmd>DiffClose<CR>
-  nnoremap <Plug>(git-extras-comment) <Cmd>Comment<CR>
-  xnoremap <Plug>(git-extras-comment) :Comment<CR>
-  nnoremap <Plug>(git-extras-comment-edit) <Cmd>Comment!<CR>
-  xnoremap <Plug>(git-extras-comment-edit) :Comment!<CR>
 
-  " Warn after a :Git checkout that left unsaved comments from another branch
-  augroup git_extras
-    autocmd!
-    autocmd User FugitiveChanged call git_extras#comments#check()
-  augroup END
+  " vim-review's review comments: on the branch side of a diff, saved per
+  " branch, and posted to the PR
+  if exists('g:loaded_review')
+    call git_extras#comments#init()
+    if executable('gh')
+      " Post the comments as a pending review on the branch's PR (or number)
+      command! -nargs=? CommentsSubmit call git_extras#comments#submit(<q-args>)
+    endif
+    " Warn after a :Git checkout that left unsaved comments from another branch
+    augroup git_extras
+      autocmd!
+      autocmd User FugitiveChanged call git_extras#comments#check()
+    augroup END
+  endif
 endfunction
 
 if v:vim_did_enter

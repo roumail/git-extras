@@ -1,8 +1,10 @@
 # git-extras
 
 Additions to [vim-fugitive](https://github.com/tpope/vim-fugitive): review a
-branch the way a pull request shows it, stage hunks in a vertical diff, collect
-review comments, and list open pull requests.
+branch the way a pull request shows it, stage hunks in a vertical diff, and list
+open pull requests. With [vim-review](https://github.com/roumail/vim-review),
+its review comments go on the branch, are saved per branch and post to the pull
+request.
 
 "Main" is the repo's default branch: `origin/HEAD`, else `origin/main`,
 `origin/master`, `main` or `master`, resolved per repo when a command runs.
@@ -46,26 +48,22 @@ Defined only when [gh](https://cli.github.com) is installed.
 
 ## Review comments
 
-Comments collect in their own quickfix list, titled `Review`, so they don't mix
-with `:Git difftool` or grep results. A comment is on a line or a range, on the
-branch side of a diff (or a file in the work tree); the merge-base side is
-refused.
+With [vim-review](https://github.com/roumail/vim-review) installed, its review
+comments (`:Comment`, `:Comments`, `:CommentsSave`, `:CommentsLoad`) work with
+git:
 
-| Command | `<Plug>` mapping | What it does |
-| --- | --- | --- |
-| `:[range]Comment [text]` | `<Plug>(git-extras-comment)` (normal and visual) | Add a comment on the line or range; prompts unless `text` is given. |
-| `:[range]Comment! [text]` | `<Plug>(git-extras-comment-edit)` (normal and visual) | Write the comment in a markdown buffer split below (`g:git_extras_comment_height`, default 10), starting with `text` if given, for longer or multi-line comments. `:w` adds it, writing again updates it, `:q!` before writing drops it. |
-| `:Comments` | | Open the `Review` list. |
-| `:CommentsSave [file]` | | Write the comments, one per line, as `path:line: comment` or `path:start-end: comment`, the further lines of a multi-line comment after it, tab-indented. Paths are relative to the repo root. Without `file`, each save is a new file named for the branch and time, `git-extras/comments/<branch>/<YYYYmmdd-HHMMSS>.txt` in the git dir, so it is never committed and reviews of different branches stay apart. |
-| `:CommentsLoad [file]` | | Replace the `Review` list with the comments in the file; without `file`, the current branch's latest save. `<Tab>` lists the branch's saves, newest first, then files. |
-| `:CommentsSubmit [number]` | | Post the comments as one **pending** review on the branch's PR, or PR `number`, through `gh api`. Only you see it until you submit it on GitHub. Defined only when `gh` is installed. |
+- A comment goes on a file in the work tree or on the branch side of a diff;
+  the merge-base side is refused. Paths are relative to the repo root.
+- Saves without a file name are per branch and time,
+  `git-extras/comments/<branch>/<YYYYmmdd-HHMMSS>.txt` in the git dir, so they
+  are never committed and reviews of different branches stay apart.
+  `:CommentsLoad` loads the current branch's latest.
+- Switching branches with unsaved comments (`:Git checkout`, `:PRs`) warns
+  once; `:Comment` and `:CommentsSubmit` warn too. Nothing is cleared.
 
-Other plugins can read the comments with `git_extras#comments#list()`
-(`{path, line, start_line?, body}`, paths relative to the work tree) and empty
-them with `git_extras#comments#clear()`.
-
-Switching branches with unsaved comments (`:Git checkout`, `:PRs`) warns
-once; `:Comment` and `:CommentsSubmit` warn too. Nothing is cleared.
+| Command | What it does |
+| --- | --- |
+| `:CommentsSubmit [number]` | Post the comments as one **pending** review on the branch's PR, or PR `number`, through `gh api`. Only you see it until you submit it on GitHub. Defined only when `gh` is installed. |
 
 Line numbers are for the branch's version of the file. A checked-out PR with
 uncommitted changes can shift them, and GitHub rejects the whole review if a
@@ -76,16 +74,16 @@ No keys are bound; bind the `<Plug>` mappings yourself, for example:
 ```vim
 nmap <leader>cd <Plug>(git-extras-diff-main)
 nmap <leader>cl <Plug>(git-extras-branch-commits)
-nmap <leader>cc <Plug>(git-extras-comment)
-xmap <leader>cc <Plug>(git-extras-comment)
 ```
 
 ## Install
 
 Requires vim-fugitive; without it the plugin warns once and defines nothing.
 `:PRs` and `:CommentsSubmit` also need `gh`, and are left out without it.
+Review comments need vim-review.
 
 ```vim
 Plug 'tpope/vim-fugitive'
+Plug 'roumail/vim-review'   " optional: review comments
 Plug 'roumail/git-extras'
 ```
