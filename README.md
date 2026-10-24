@@ -55,7 +55,7 @@ git:
 - A comment goes on a file in the work tree or on the branch side of a diff;
   the merge-base side is refused. Paths are relative to the repo root.
 - Saves without a file name are per branch and time,
-  `git-extras/comments/<branch>/<YYYYmmdd-HHMMSS>.txt` in the git dir, so they
+  `vim-review/<branch>/<YYYYmmdd-HHMMSS>.txt` in the git dir, so they
   are never committed and reviews of different branches stay apart.
   `:CommentsLoad` loads the current branch's latest.
 - Switching branches with unsaved comments (`:Git checkout`, `:PRs`) warns

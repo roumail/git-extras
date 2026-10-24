@@ -29,12 +29,12 @@ endfunction
 
 " Saves for the current branch (the commit when detached), in the git dir
 " shared by all work trees, so never committed:
-" git-extras/comments/<branch>/<time>.txt
+" vim-review/<branch>/<time>.txt
 function! s:save_dir() abort
   let l:common = FugitiveCommonDir()
   let l:head = FugitiveHead(7)
   return empty(l:common) || empty(l:head) ? ''
-        \ : l:common . '/git-extras/comments/' . l:head
+        \ : l:common . '/vim-review/' . l:head
 endfunction
 
 " Makes this vim-review's provider
