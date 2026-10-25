@@ -51,7 +51,7 @@ and age.
 | Key | Action |
 | --- | --- |
 | `<CR>` | Close the list and open all its files again, in new tabs, against the same merge-base. `:BranchDiff` again to diff against a new one. |
-| `d` | Remove it. Its tabs stay open; `:CompareClose` it first to close them. |
+| `d` | Remove it from the list. Its tabs stay open. To close them too, run `:CompareClose <name>` before removing it. |
 | `r` | Refresh. |
 | `q` | Close (`:q` too: the list has its own window). |
 
