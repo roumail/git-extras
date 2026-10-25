@@ -79,7 +79,7 @@ function! git_extras#compares#remove(dir, name) abort
 endfunction
 
 " ---------------------------------------------------------------------------
-" :Compares, a scratch buffer like :PRs
+" :Compares, a list like :PRs
 
 " 40s / 5m / 3h
 function! s:age(time) abort
@@ -103,6 +103,7 @@ function! s:render() abort
         \ . ')  <CR> open  d remove  r refresh  q close']
         \ + map(copy(b:git_extras_compares), 's:line(v:val)'))
   setlocal nomodifiable nomodified
+  call git_extras#list_fit()
   call cursor(2, 1)
 endfunction
 
@@ -113,24 +114,12 @@ function! git_extras#compares#show() abort
     call s:error('not in a git work tree')
     return
   endif
-  execute 'silent edit' fnameescape('git-extras://compares/' . fnamemodify(l:worktree, ':t'))
-  setlocal buftype=nofile bufhidden=wipe noswapfile nowrap nobuflisted
+  call git_extras#list_open('git-extras://compares/' . fnamemodify(l:worktree, ':t'))
   let b:git_extras_dir = l:dir
   nnoremap <buffer><silent> <CR> <Cmd>call <SID>open()<CR>
   nnoremap <buffer><silent> d <Cmd>call <SID>remove()<CR>
   nnoremap <buffer><silent> r <Cmd>call <SID>render()<CR>
-  nnoremap <buffer><silent> q <Cmd>call <SID>leave()<CR>
   call s:render()
-endfunction
-
-" Back to the buffer you came from, which wipes this one (bufhidden=wipe).
-" Not :bwipe, which closes the tab when this is its only window.
-function! s:leave() abort
-  if buflisted(bufnr('#'))
-    buffer #
-  else
-    enew
-  endif
 endfunction
 
 " The comparison on the cursor's line, {} on the heading
@@ -138,14 +127,14 @@ function! s:selected() abort
   return get(b:git_extras_compares, line('.') - 2, {})
 endfunction
 
-" Back to where you were, then its files in new tabs, all of them again
+" Closes the list, then its files in new tabs, all of them again
 function! s:open() abort
   let l:compare = s:selected()
   if empty(l:compare)
     return
   endif
   let l:dir = b:git_extras_dir
-  call s:leave()
+  call git_extras#list_close()
   call git_extras#compares#open(l:dir, l:compare.name, l:compare.base, l:compare.head)
 endfunction
 

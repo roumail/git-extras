@@ -1,6 +1,6 @@
 " :PRs: the repo's open pull requests, most recently updated first, in a
-" scratch buffer. One GraphQL query through gh; JSON is parsed here, so jq
-" isn't needed.
+" window at the bottom. One GraphQL query through gh; JSON is parsed here, so
+" jq isn't needed.
 
 let s:query = 'query($owner: String!, $name: String!, $count: Int!) {'
       \ . ' repository(owner: $owner, name: $name) {'
@@ -91,6 +91,7 @@ function! s:render() abort
   call setline(1, ['Open PRs (' . len(l:prs) . ')  <CR> checkout  o browser  r refresh  q close']
         \ + map(copy(l:prs), 's:line(v:val, l:names)'))
   setlocal nomodifiable nomodified
+  call git_extras#list_fit()
   call cursor(2, 1)
 endfunction
 
@@ -103,14 +104,12 @@ function! git_extras#prs#open(count) abort
   if !git_extras#require_remote(':PRs')
     return
   endif
-  execute 'silent edit' fnameescape('git-extras://prs/' . fnamemodify(l:worktree, ':t'))
-  setlocal buftype=nofile bufhidden=wipe noswapfile nowrap nobuflisted
+  call git_extras#list_open('git-extras://prs/' . fnamemodify(l:worktree, ':t'))
   let b:git_extras_worktree = l:worktree
   let b:git_extras_count = empty(a:count) ? 20 : a:count
   nnoremap <buffer><silent> <CR> <Cmd>call <SID>checkout()<CR>
   nnoremap <buffer><silent> o <Cmd>call <SID>browse()<CR>
   nnoremap <buffer><silent> r <Cmd>call <SID>render()<CR>
-  nnoremap <buffer><silent> q <Cmd>bwipe<CR>
   call s:render()
 endfunction
 
@@ -128,7 +127,7 @@ function! s:checkout() abort
   if s:gh(l:worktree, 'pr checkout ' . l:number) is v:null
     return
   endif
-  bwipe
+  call git_extras#list_close()
   checktime
   echo 'Checked out #' . l:number . ' (:BranchDiff, :BranchCommits to review)'
   call git_extras#comments#check()

@@ -43,21 +43,21 @@ that raise no questions leaves the ones that do, and
 with all its tabs closed, for the rest of the Vim session; another
 `:BranchDiff` of the same branch replaces it.
 
-`:Compares` lists them in a scratch buffer: name, `base..head` (`work tree`
+`:Compares` lists them in a window at the bottom: name, `base..head` (`work tree`
 when uncommitted changes are in it), files, how many of its tabs are open,
 and age.
 
 | Key | Action |
 | --- | --- |
-| `<CR>` | Go back to where you were and open all its files again, in new tabs, against the same merge-base. `:BranchDiff` again to diff against a new one. |
+| `<CR>` | Close the list and open all its files again, in new tabs, against the same merge-base. `:BranchDiff` again to diff against a new one. |
 | `d` | Remove it. Its tabs stay open. |
 | `r` | Refresh. |
-| `q` | Close. |
+| `q` | Close (`:q` too: the list has its own window). |
 
 ## Open pull requests
 
 `:PRs [count]` lists the repo's open pull requests, most recently updated first
-(default 20), in a scratch buffer: number, review state (`draft`, `approved`,
+(default 20), in a window at the bottom: number, review state (`draft`, `approved`,
 `changes`, `review`, or `-`), age, author, branch and title.
 
 Authors' logins can get a readable name beside them, from a file of
@@ -70,10 +70,10 @@ let g:git_extras_pr_authors = '~/.config/gh-pr-authors.txt'  " the default
 
 | Key | What it does |
 | --- | --- |
-| `<CR>` | `gh pr checkout` the PR, then go back to where you were. `:BranchDiff` / `:BranchCommits` review it. |
+| `<CR>` | `gh pr checkout` the PR and close the list. `:BranchDiff` / `:BranchCommits` review it. |
 | `o` | Open the PR in the browser. |
 | `r` | Refresh. |
-| `q` | Close. |
+| `q` | Close (`:q` too). |
 
 Defined only when [gh](https://cli.github.com) is installed.
 

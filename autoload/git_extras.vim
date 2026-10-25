@@ -139,6 +139,34 @@ function! git_extras#complete_commits(lead, cmdline, pos) abort
   return getcompletion(a:lead, 'file')
 endfunction
 
+" The lists (:PRs, :Compares) are scratch buffers in a window of their own at
+" the bottom, so q and :q close only them, never a window of yours.
+function! git_extras#list_open(name) abort
+  let l:winnr = bufwinnr('^' . a:name . '$')
+  if l:winnr > 0
+    execute l:winnr . 'wincmd w'
+  else
+    execute 'silent botright split' fnameescape(a:name)
+  endif
+  setlocal buftype=nofile bufhidden=wipe noswapfile nowrap nobuflisted winfixheight
+  nnoremap <buffer><silent> q <Cmd>call git_extras#list_close()<CR>
+endfunction
+
+" Its window fits its lines, up to 15
+function! git_extras#list_fit() abort
+  execute 'resize' min([line('$'), 15])
+endfunction
+
+" Closes its window, and with it the list (bufhidden=wipe); when it's the
+" last window left, shows an empty buffer instead
+function! git_extras#list_close() abort
+  if winnr('$') > 1
+    close
+  else
+    enew
+  endif
+endfunction
+
 function! git_extras#diff_close() abort
   for l:win in reverse(range(1, winnr('$')))
     if bufname(winbufnr(l:win)) =~# '^fugitive://' && winnr('$') > 1
