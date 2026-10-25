@@ -93,11 +93,13 @@ function! s:is_commit(rev) abort
 endfunction
 
 " With a branch, diffs are merge-base..branch; without, merge-base against the
-" working tree, so uncommitted changes show too.
+" working tree, so uncommitted changes show too. Listed in :Compares as the
+" branch, or the current branch's name.
 function! git_extras#branch_diff(branch) abort
   let l:base = s:base(a:branch)
   if !empty(l:base)
-    execute 'Git difftool -y' l:base a:branch
+    call git_extras#compares#open(FugitiveGitDir(),
+          \ empty(a:branch) ? FugitiveHead(7) : a:branch, l:base, a:branch)
   endif
 endfunction
 

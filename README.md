@@ -24,12 +24,35 @@ new remote branches.
 | --- | --- | --- |
 | `:DiffThis` | `<Plug>(git-extras-diff-this)` | `:Gvdiffsplit`: index on the left, working tree on the right. `dp` on a hunk in the working tree stages it, `do` in the index unstages it; `:w` the index buffer to keep it. |
 | `:DiffThis!` | `<Plug>(git-extras-diff-main)` | The current file at the merge-base on the left, working tree on the right: what the branch changes in it. |
-| `:BranchDiff [branch]` | `<Plug>(git-extras-branch-diff)` | One tab per changed file, each already a diff against the merge-base (`:Git difftool -y`). |
+| `:BranchDiff [branch]` | `<Plug>(git-extras-branch-diff)` | One tab per changed file, each already a diff against the merge-base (`:Git difftool -y`), listed in `:Compares`. |
 | `:BranchCommits [branch] [args]` | `<Plug>(git-extras-branch-commits)` | Commits on the branch that main lacks (`:Git log base..branch`). `<CR>` on a commit opens it. Extra args go to `git log`, e.g. `:BranchCommits --stat` or `:BranchCommits -- %`. |
 | `:DiffClose` | `<Plug>(git-extras-diff-close)` | Close the `fugitive://` windows in this tab and `:diffoff!`. |
+| `:Compares` | `<Plug>(git-extras-compares)` | The comparisons `:BranchDiff` opened, newest first (see below). |
 
 Reviewing a PR: check it out (`gh pr checkout`), then `:BranchDiff` and
 `:BranchCommits`.
+
+## Comparisons
+
+Each `:BranchDiff` is kept as a comparison, as in GitLens' Search & Compare:
+named for the branch (the current branch's name without one), with the
+merge-base it diffed against. Its tabs carry its name, so closing the files
+that raise no questions leaves the ones that do, and
+[vim-prompts](https://github.com/roumail/vim-prompts) can send those with
+`#diff_pairs:<name>`. A comparison stays listed until you remove it, even
+with all its tabs closed, for the rest of the Vim session; another
+`:BranchDiff` of the same branch replaces it.
+
+`:Compares` lists them in a scratch buffer: name, `base..head` (`work tree`
+when uncommitted changes are in it), files, how many of its tabs are open,
+and age.
+
+| Key | Action |
+| --- | --- |
+| `<CR>` | Go back to where you were and open all its files again, in new tabs, against the same merge-base. `:BranchDiff` again to diff against a new one. |
+| `d` | Remove it. Its tabs stay open. |
+| `r` | Refresh. |
+| `q` | Close. |
 
 ## Open pull requests
 

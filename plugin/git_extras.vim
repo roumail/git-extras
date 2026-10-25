@@ -1,9 +1,9 @@
 " git-extras: additions to vim-fugitive. Review a branch against the repo's
-" default branch (main/master), stage hunks in a vertical diff, and list open
-" PRs. With roumail/vim-review, its review comments go on fugitive diffs, are
-" saved per branch and post to the PR. Commands and <Plug> mappings only; no
-" keys are bound here. Requires tpope/vim-fugitive; the GitHub commands need
-" gh.
+" default branch (main/master), keeping each review as a comparison, stage
+" hunks in a vertical diff, and list open PRs. With roumail/vim-review, its
+" review comments go on fugitive diffs, are saved per branch and post to the
+" PR. Commands and <Plug> mappings only; no keys are bound here. Requires
+" tpope/vim-fugitive; the GitHub commands need gh.
 if exists('g:loaded_git_extras')
   finish
 endif
@@ -37,6 +37,8 @@ function! s:init() abort
         \ BranchCommits call git_extras#branch_commits(<q-args>)
   " Close the fugitive side of the diff in this tab and turn diff mode off
   command! DiffClose call git_extras#diff_close()
+  " The :BranchDiff comparisons of this session; <CR> reopens one, d removes
+  command! Compares call git_extras#compares#show()
 
   if executable('gh')
     " Open PRs (default 20), latest first; <CR> checks one out
@@ -48,6 +50,7 @@ function! s:init() abort
   nnoremap <Plug>(git-extras-branch-diff) <Cmd>BranchDiff<CR>
   nnoremap <Plug>(git-extras-branch-commits) <Cmd>BranchCommits<CR>
   nnoremap <Plug>(git-extras-diff-close) <Cmd>DiffClose<CR>
+  nnoremap <Plug>(git-extras-compares) <Cmd>Compares<CR>
 
   " vim-review's review comments: on the branch side of a diff, saved per
   " branch, and posted to the PR
