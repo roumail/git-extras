@@ -94,11 +94,14 @@ git:
 
 | Command | What it does |
 | --- | --- |
-| `:CommentsSubmit [number]` | Post the comments as one **pending** review on the branch's PR, or PR `number`, through `gh api`. Only you see it until you submit it on GitHub. Refused while any comment's lines are gone (`W` in `:Comments`, see vim-review's anchors). Defined only when `gh` is installed. |
+| `:CommentsSubmit [number]` | Post the comments as one **pending** review of `HEAD` on the branch's PR, or PR `number`, through `gh api`. Only you see it until you submit it on GitHub. Refused while any comment's lines are gone (`W` in `:Comments`, see vim-review's anchors). Defined only when `gh` is installed. |
 
-Line numbers are for the branch's version of the file. A checked-out PR with
-uncommitted changes can shift them, and GitHub rejects the whole review if a
-line is outside the PR's diff.
+The review is of the commit you read: `HEAD`, so check the PR out (`:PRs`,
+`<CR>`) to review it. If the author pushes more before you submit, the
+comments stay on that commit, as on GitHub. Comments on a file changed since
+`HEAD` are refused, since their lines aren't its; commit or stash first. A PR
+that doesn't contain `HEAD` (another branch checked out) rejects the review,
+and so does a line outside the PR's diff.
 
 No keys are bound; bind the `<Plug>` mappings yourself, for example:
 

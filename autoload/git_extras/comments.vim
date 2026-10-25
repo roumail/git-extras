@@ -54,8 +54,9 @@ function! git_extras#comments#check() abort
   endif
 endfunction
 
-" Posts the comments as one pending review on a PR (the current branch's, or
-" number), so you can check them on GitHub and submit there or with gh.
+" Posts the comments as one pending review of HEAD on a PR (the current
+" branch's, or number), so you can check them on GitHub and submit there or
+" with gh.
 function! git_extras#comments#submit(number) abort
   let l:worktree = FugitiveWorkTree()
   if empty(l:worktree)
@@ -77,6 +78,22 @@ function! git_extras#comments#submit(number) abort
     call s:error(l:orphaned . ' comments whose lines are gone (W in :Comments); comment again where they belong, or drop them, first')
     return
   endif
+  " The review is of HEAD, the commit you read: GitHub rejects it when HEAD
+  " isn't in the PR, and keeps the comments on it after newer pushes. Lines
+  " are the work tree's, so a commented file must not have changed since.
+  let l:head = FugitiveExecute(['rev-parse', 'HEAD'])
+  let l:changed = FugitiveExecute(['diff', '--name-only', 'HEAD', '--']
+        \ + uniq(sort(map(copy(l:comments), 'v:val.path'))))
+  if l:head.exit_status || l:changed.exit_status
+    call s:error('git: cannot read HEAD or its changes')
+    return
+  endif
+  call filter(l:changed.stdout, '!empty(v:val)')
+  if !empty(l:changed.stdout)
+    call s:error('comments on files changed since HEAD, so their lines are not its: '
+          \ . join(l:changed.stdout, ', ') . '; commit or stash the changes first')
+    return
+  endif
   for l:c in l:comments
     let l:c.side = 'RIGHT'
     if has_key(l:c, 'start_line')
@@ -94,10 +111,11 @@ function! git_extras#comments#submit(number) abort
   endif
   let l:out = system(l:cd . 'gh api repos/{owner}/{repo}/pulls/' . l:number
         \ . '/reviews --input - --jq .html_url',
-        \ json_encode({'comments': l:comments}))
+        \ json_encode({'commit_id': l:head.stdout[0], 'comments': l:comments}))
   if v:shell_error
     call s:error('gh: ' . substitute(trim(l:out), '\n', ' ', 'g'))
     return
   endif
-  echo 'Pending review with ' . len(l:comments) . ' comments: ' . trim(l:out)
+  echo 'Pending review of ' . l:head.stdout[0][:6] . ' with ' . len(l:comments)
+        \ . ' comments: ' . trim(l:out)
 endfunction
