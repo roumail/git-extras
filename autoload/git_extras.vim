@@ -167,7 +167,12 @@ function! git_extras#list_close() abort
   endif
 endfunction
 
-function! git_extras#diff_close() abort
+" With !, every tab of this tab's comparison, back to where :BranchDiff ran
+function! git_extras#diff_close(all) abort
+  if a:all
+    call git_extras#compares#close()
+    return
+  endif
   for l:win in reverse(range(1, winnr('$')))
     if bufname(winbufnr(l:win)) =~# '^fugitive://' && winnr('$') > 1
       execute l:win . 'close'

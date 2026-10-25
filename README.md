@@ -27,6 +27,7 @@ new remote branches.
 | `:BranchDiff [branch]` | `<Plug>(git-extras-branch-diff)` | One tab per changed file, each already a diff against the merge-base (`:Git difftool -y`), listed in `:Compares`. |
 | `:BranchCommits [branch] [args]` | `<Plug>(git-extras-branch-commits)` | Commits on the branch that main lacks (`:Git log base..branch`). `<CR>` on a commit opens it. Extra args go to `git log`, e.g. `:BranchCommits --stat` or `:BranchCommits -- %`. |
 | `:DiffClose` | `<Plug>(git-extras-diff-close)` | Close the `fugitive://` windows in this tab and `:diffoff!`. |
+| `:DiffClose!` | `<Plug>(git-extras-compare-close)` | Close every tab of this tab's `:BranchDiff` comparison and go back to the window it was run from. It stays in `:Compares`. |
 | `:Compares` | `<Plug>(git-extras-compares)` | The comparisons `:BranchDiff` opened, newest first (see below). |
 
 Reviewing a PR: check it out (`gh pr checkout`), then `:BranchDiff` and

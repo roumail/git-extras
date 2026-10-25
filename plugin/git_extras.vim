@@ -35,8 +35,10 @@ function! s:init() abort
   " Commits on the branch that main doesn't have; further args go to git log
   command! -nargs=* -complete=customlist,git_extras#complete_commits
         \ BranchCommits call git_extras#branch_commits(<q-args>)
-  " Close the fugitive side of the diff in this tab and turn diff mode off
-  command! DiffClose call git_extras#diff_close()
+  " Close the fugitive side of the diff in this tab and turn diff mode off.
+  " With !, close every tab of this tab's :BranchDiff comparison and go back
+  " to the window it was run from.
+  command! -bang DiffClose call git_extras#diff_close(<bang>0)
   " The :BranchDiff comparisons of this session; <CR> reopens one, d removes
   command! Compares call git_extras#compares#show()
 
@@ -50,6 +52,7 @@ function! s:init() abort
   nnoremap <Plug>(git-extras-branch-diff) <Cmd>BranchDiff<CR>
   nnoremap <Plug>(git-extras-branch-commits) <Cmd>BranchCommits<CR>
   nnoremap <Plug>(git-extras-diff-close) <Cmd>DiffClose<CR>
+  nnoremap <Plug>(git-extras-compare-close) <Cmd>DiffClose!<CR>
   nnoremap <Plug>(git-extras-compares) <Cmd>Compares<CR>
 
   " vim-review's review comments: on the branch side of a diff, saved per

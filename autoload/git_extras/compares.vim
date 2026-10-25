@@ -3,8 +3,9 @@
 " Its tabs carry it as t:git_extras_compare, so closing the ones that raised
 " no questions leaves the ones that did. For this Vim session only.
 
-" {dir, name, base, head, files, time}: dir is the git dir, so each work
-" tree has its own; head '' is the work tree
+" {dir, name, base, head, files, time, win}: dir is the git dir, so each work
+" tree has its own; head '' is the work tree; win the window :BranchDiff was
+" run from, to go back to
 let s:compares = []
 
 function! s:error(msg) abort
@@ -30,6 +31,7 @@ endfunction
 " of that name
 function! git_extras#compares#open(dir, name, base, head) abort
   let l:here = tabpagenr()
+  let l:win = win_getid()
   let l:before = tabpagenr('$')
   " :Git in that repo, whichever buffer this is
   execute fugitive#Command(line('.'), -1, 0, 0, '', 'difftool -y ' . a:base . ' ' . a:head, a:dir)
@@ -47,7 +49,7 @@ function! git_extras#compares#open(dir, name, base, head) abort
     call git_extras#compares#remove(a:dir, a:name)
   endif
   let l:compare = {'dir': a:dir, 'name': a:name, 'base': a:base,
-        \ 'head': a:head, 'files': l:files, 'time': localtime()}
+        \ 'head': a:head, 'files': l:files, 'time': localtime(), 'win': l:win}
   call add(s:compares, l:compare)
   for l:tab in range(l:here + 1, l:here + l:files)
     call settabvar(l:tab, 'git_extras_compare', s:key(l:compare))
@@ -76,6 +78,36 @@ function! git_extras#compares#remove(dir, name) abort
     endfor
     call remove(s:compares, index(s:compares, l:compare))
   endfor
+endfunction
+
+" Closes the tabs of the comparison this tab shows and goes back to the window
+" it was opened from. It stays listed, to open again from :Compares.
+function! git_extras#compares#close() abort
+  let l:key = get(t:, 'git_extras_compare', {})
+  let l:compare = get(filter(copy(s:compares), 's:key(v:val) == l:key'), 0, {})
+  if empty(l:compare)
+    call s:error('this tab is not in a :BranchDiff comparison')
+    return
+  endif
+  let l:tabs = s:tabs(l:compare)
+  if len(l:tabs) == tabpagenr('$')
+    " Vim keeps one tab: an empty one
+    $tabnew
+  endif
+  let l:left = 0
+  for l:tab in reverse(l:tabs)
+    try
+      execute l:tab . 'tabclose'
+    catch
+      " A file changed and not written
+      let l:left += 1
+    endtry
+  endfor
+  call win_gotoid(l:compare.win)
+  if l:left
+    call s:error(l:left . ' tab(s) of ' . l:compare.name
+          \ . ' left open: unsaved changes')
+  endif
 endfunction
 
 " ---------------------------------------------------------------------------
