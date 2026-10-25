@@ -80,16 +80,23 @@ function! git_extras#compares#remove(dir, name) abort
   endfor
 endfunction
 
-" Closes the tabs of the comparison this tab shows and goes back to the window
-" it was opened from. It stays listed, to open again from :Compares.
-function! git_extras#compares#close() abort
-  let l:key = get(t:, 'git_extras_compare', {})
-  let l:compare = get(filter(copy(s:compares), 's:key(v:val) == l:key'), 0, {})
+" Closes the tabs of the comparison name in the current buffer's repo; from
+" one of them, goes back to the window :BranchDiff was run from. It stays
+" listed, to open again from :Compares.
+function! git_extras#compares#close(name) abort
+  let l:dir = FugitiveGitDir()
+  let l:compare = get(filter(copy(s:compares),
+        \ 'v:val.dir ==# l:dir && v:val.name ==# a:name'), 0, {})
   if empty(l:compare)
-    call s:error('this tab is not in a :BranchDiff comparison')
+    call s:error('no comparison ' . a:name . ' in :Compares')
     return
   endif
   let l:tabs = s:tabs(l:compare)
+  if empty(l:tabs)
+    echo 'git-extras: no tabs of ' . a:name . ' open'
+    return
+  endif
+  let l:from = index(l:tabs, tabpagenr()) >= 0
   if len(l:tabs) == tabpagenr('$')
     " Vim keeps one tab: an empty one
     $tabnew
@@ -103,11 +110,19 @@ function! git_extras#compares#close() abort
       let l:left += 1
     endtry
   endfor
-  call win_gotoid(l:compare.win)
+  if l:from
+    call win_gotoid(l:compare.win)
+  endif
   if l:left
     call s:error(l:left . ' tab(s) of ' . l:compare.name
           \ . ' left open: unsaved changes')
   endif
+endfunction
+
+" The comparison names in the current buffer's repo, for :CompareClose <Tab>
+function! git_extras#compares#complete(lead, cmdline, pos) abort
+  return filter(map(git_extras#compares#list(), 'v:val.name'),
+        \ 'stridx(v:val, a:lead) == 0')
 endfunction
 
 " ---------------------------------------------------------------------------

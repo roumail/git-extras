@@ -27,7 +27,7 @@ new remote branches.
 | `:BranchDiff [branch]` | `<Plug>(git-extras-branch-diff)` | One tab per changed file, each already a diff against the merge-base (`:Git difftool -y`), listed in `:Compares`. |
 | `:BranchCommits [branch] [args]` | `<Plug>(git-extras-branch-commits)` | Commits on the branch that main lacks (`:Git log base..branch`). `<CR>` on a commit opens it. Extra args go to `git log`, e.g. `:BranchCommits --stat` or `:BranchCommits -- %`. |
 | `:DiffClose` | `<Plug>(git-extras-diff-close)` | Close the `fugitive://` windows in this tab and `:diffoff!`. |
-| `:DiffClose!` | `<Plug>(git-extras-compare-close)` | Close every tab of this tab's `:BranchDiff` comparison and go back to the window it was run from. It stays in `:Compares`. |
+| `:CompareClose {name}` | | Close the tabs of a `:BranchDiff` comparison (`<Tab>` completes names), and from one of them go back to the window `:BranchDiff` was run from. It stays in `:Compares`. A tab with unsaved changes stays open. |
 | `:Compares` | `<Plug>(git-extras-compares)` | The comparisons `:BranchDiff` opened, newest first (see below). |
 
 Reviewing a PR: check it out (`gh pr checkout`), then `:BranchDiff` and
@@ -51,7 +51,7 @@ and age.
 | Key | Action |
 | --- | --- |
 | `<CR>` | Close the list and open all its files again, in new tabs, against the same merge-base. `:BranchDiff` again to diff against a new one. |
-| `d` | Remove it. Its tabs stay open. |
+| `d` | Remove it. Its tabs stay open; `:CompareClose` it first to close them. |
 | `r` | Refresh. |
 | `q` | Close (`:q` too: the list has its own window). |
 
