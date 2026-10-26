@@ -53,7 +53,8 @@ function! s:age(iso) abort
 endfunction
 
 " login -> readable name, from g:git_extras_pr_authors (default
-" ~/.config/gh-pr-authors.txt), one login:name per line; {} without the file
+" ~/.config/gh-pr-authors.txt), one login:name per line; {} without the file.
+" Keyed lowercase: logins aren't case-sensitive
 function! s:authors() abort
   let l:file = expand(get(g:, 'git_extras_pr_authors', '~/.config/gh-pr-authors.txt'))
   let l:names = {}
@@ -61,7 +62,7 @@ function! s:authors() abort
     for l:line in readfile(l:file)
       let l:m = matchlist(l:line, '^\s*\([^:#[:space:]]\+\)\s*:\s*\(.\{-}\)\s*$')
       if !empty(l:m) && !empty(l:m[2])
-        let l:names[l:m[1]] = l:m[2]
+        let l:names[tolower(l:m[1])] = l:m[2]
       endif
     endfor
   endif
@@ -73,9 +74,16 @@ function! s:line(pr, names) abort
   let l:state = a:pr.isDraft ? 'draft'
         \ : get(s:states, type(a:pr.reviewDecision) == v:t_string ? a:pr.reviewDecision : '', '-')
   let l:author = type(a:pr.author) == v:t_dict ? a:pr.author.login : 'ghost'
-  let l:name = empty(a:names) ? '' : printf('%-20.20s ', get(a:names, l:author, ''))
+  let l:name = empty(a:names) ? '' : printf('%-20.20s ', get(a:names, tolower(l:author), ''))
   return printf('#%-5d %-8s %-4s %-16.16s %s%-30.30s %s', a:pr.number, l:state,
         \ s:age(a:pr.updatedAt), l:author, l:name, a:pr.headRefName, a:pr.title)
+endfunction
+
+" Column headings, in s:line()'s widths
+function! s:heading(names) abort
+  let l:name = empty(a:names) ? '' : printf('%-20s ', 'name')
+  return printf('%-6s %-8s %-4s %-16s %s%-30s %s', '#', 'state', 'age', 'author',
+        \ l:name, 'branch', 'title')
 endfunction
 
 function! s:render() abort
@@ -88,11 +96,11 @@ function! s:render() abort
   let l:names = s:authors()
   setlocal modifiable
   silent %delete _
-  call setline(1, ['Open PRs (' . len(l:prs) . ')  <CR> checkout  o browser  r refresh  q close']
-        \ + map(copy(l:prs), 's:line(v:val, l:names)'))
+  call setline(1, ['Open PRs (' . len(l:prs) . ')  <CR> checkout  o browser  r refresh  q close',
+        \ s:heading(l:names)] + map(copy(l:prs), 's:line(v:val, l:names)'))
   setlocal nomodifiable nomodified
   call git_extras#list_fit()
-  call cursor(2, 1)
+  call cursor(3, 1)
 endfunction
 
 function! git_extras#prs#open(count) abort
